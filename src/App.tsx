@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Viewer, Entity, PointGraphics, PolylineGraphics, EllipseGraphics } from 'resium';
+import type { CesiumComponentRef } from 'resium';
 import { Cartesian3, Color } from 'cesium';
 import * as satellite from 'satellite.js';
+import type { Viewer as CesiumViewer } from 'cesium';
 
 import type { IssState } from './types';
 import { calculateIssTelemetry, checkAosStatus, calculateOrbitPoints } from './utils/orbitalLogic';
@@ -26,6 +28,7 @@ const App: React.FC = () => {
   ]);
 
   const prevAosRef = useRef<boolean | null>(null);
+  const viewerRef = useRef<CesiumComponentRef<CesiumViewer>>(null);
 
   const orbitPastMat = useMemo(() => Color.CYAN.withAlpha(0.3), []);
   const orbitFutureMat = useMemo(() => Color.YELLOW.withAlpha(0.4), []);
@@ -92,6 +95,7 @@ setLogs(prev => [warnLog, ...prev].slice(0, 5));
         setPosition(result.cartesian);
         setIssState(result.telemetry);
         setIsAOS(checkAosStatus(result.pEci, result.gmst));
+        viewerRef.current?.cesiumElement?.scene.requestRender();
       }
     };
 
@@ -135,7 +139,7 @@ setLogs(prev => [warnLog, ...prev].slice(0, 5));
         selectionIndicator={false}
         infoBox={false}
         // 変化時のみ再描画
-        requestRenderMode
+        requestRenderMode ref = {viewerRef}
       >
         {settings.station && <GroundStationLayer isAOS={isAOS} issPos={position} />}
 
