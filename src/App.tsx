@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Viewer, Entity, PointGraphics, PolylineGraphics, EllipseGraphics } from 'resium';
 import { Cartesian3, Color } from 'cesium';
 import * as satellite from 'satellite.js';
