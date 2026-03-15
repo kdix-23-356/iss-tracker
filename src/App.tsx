@@ -1,121 +1,115 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useEffect, useState, useRef } from 'react';
+import { Viewer, Entity, PointGraphics, PolylineGraphics, EllipseGraphics } from 'resium';
+import { Cartesian3, Color } from 'cesium';
+import * as satellite from 'satellite.js';
 
-function App() {
-  const [count, setCount] = useState(0)
+import type { IssState } from './types';
+import { calculateIssTelemetry, checkAosStatus, calculateOrbitPoints } from './utils/orbitalLogic';
+import { Dashboard } from './components/Dashboard';
+import { ConfigPanel } from './components/ConfigPanel';
+import { GroundStationLayer } from './components/GroundStationLayer';
+import { EventLogPanel, type LogEvent } from './components/EventLogPanel';
+
+const App: React.FC = () => {
+  const [tle, setTle] = useState<any>(null);
+  const [position, setPosition] = useState<Cartesian3 | null>(null);
+  const [issState, setIssState] = useState<IssState | null>(null);
+  const [orbit, setOrbit] = useState<{ past: Cartesian3[], future: Cartesian3[] }>({ past: [], future: [] });
+  const [isAOS, setIsAOS] = useState(false);
+  
+  // 新機能用のState
+  const [settings, setSettings] = useState({ orbit: true, station: true, footprint: true, log: true });
+  const [logs, setLogs] = useState<LogEvent[]>([
+    { id: Date.now(), time: new Date(), message: 'System Initialized', type: 'info' }
+  ]);
+  
+  // 状態変化（エッジ検知）のためのRef
+  const prevAosRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.wheretheiss.at/v1/satellites/25544/tles')
+      .then(res => res.json()).then(setTle);
+  }, []);
+
+  // AOSの状態が変わった時だけログを追加する副作用
+  useEffect(() => {
+    if (prevAosRef.current !== null && prevAosRef.current !== isAOS) {
+      const newLog: LogEvent = {
+        id: Date.now(),
+        time: new Date(),
+        message: isAOS ? 'AOS: JAXA Tsukuba (Comm Link Established)' : 'LOS: JAXA Tsukuba (Comm Link Lost)',
+        type: isAOS ? 'success' : 'warning'
+      };
+      // 最新の5件だけを保持する
+      setLogs(prevLogs => [newLog, ...prevLogs].slice(0, 5));
+    }
+    prevAosRef.current = isAOS;
+  }, [isAOS]);
+
+  useEffect(() => {
+    if (!tle) return;
+    const satrec = satellite.twoline2satrec(tle.line1, tle.line2);
+
+    const tick = () => {
+      const now = new Date();
+      const result = calculateIssTelemetry(satrec, now);
+      if (result) {
+        setPosition(result.cartesian);
+        setIssState(result.telemetry);
+        setIsAOS(checkAosStatus(result.pEci, result.gmst));
+      }
+    };
+
+    const updateOrbit = () => {
+      const now = new Date();
+      const points = calculateOrbitPoints(satrec, now, 90, 2);
+      setOrbit({ past: points.slice(0, 46), future: points.slice(45) });
+    };
+
+    tick(); 
+    updateOrbit();
+    const timers = [setInterval(tick, 1000), setInterval(updateOrbit, 60000)];
+    return () => timers.forEach(clearInterval);
+  }, [tle]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
+      {/* UIレイヤー */}
+      {issState && <Dashboard state={issState} />}
+      <ConfigPanel settings={settings} setSettings={setSettings} />
+      {settings.log && <EventLogPanel logs={logs} />}
 
-      <div className="ticks"></div>
+      {/* 3Dキャンバスレイヤー */}
+      <Viewer full timeline={false} animation={false} selectionIndicator={false} infoBox={false}>
+        {settings.station && <GroundStationLayer isAOS={isAOS} issPos={position} />}
+        
+        {settings.orbit && (
+          <>
+            <Entity><PolylineGraphics positions={orbit.past} width={2} material={Color.CYAN.withAlpha(0.3)} /></Entity>
+            <Entity><PolylineGraphics positions={orbit.future} width={2} material={Color.YELLOW.withAlpha(0.4)} /></Entity>
+          </>
+        )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {position && (
+            <Entity position={position} name="ISS">
+            <PointGraphics pixelSize={12} color={isAOS ? Color.LIME : Color.YELLOW} outlineColor={Color.BLACK} outlineWidth={2} />
+            
+            {/* フットプリントの描画 */}
+            {settings.footprint && (
+              <EllipseGraphics 
+                semiMajorAxis={2200000} // 約2200km
+                semiMinorAxis={2200000}
+                height={0}
+                material={Color.YELLOW.withAlpha(0.15)}
+                outline={true}
+                outlineColor={Color.YELLOW.withAlpha(0.8)}
+              />
+            )}
+          </Entity>
+        )}
+      </Viewer>
+    </div>
+  );
+};
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
-
-export default App
+export default App;
