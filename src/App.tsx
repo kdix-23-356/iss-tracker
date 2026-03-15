@@ -16,13 +16,13 @@ const App: React.FC = () => {
   const [issState, setIssState] = useState<IssState | null>(null);
   const [orbit, setOrbit] = useState<{ past: Cartesian3[], future: Cartesian3[] }>({ past: [], future: [] });
   const [isAOS, setIsAOS] = useState(false);
-  
+
   // 新機能用のState
   const [settings, setSettings] = useState({ orbit: true, station: true, footprint: true, log: true });
   const [logs, setLogs] = useState<LogEvent[]>([
     { id: Date.now(), time: new Date(), message: 'System Initialized', type: 'info' }
   ]);
-  
+
   // 状態変化（エッジ検知）のためのRef
   const prevAosRef = useRef<boolean | null>(null);
 
@@ -66,7 +66,7 @@ const App: React.FC = () => {
       setOrbit({ past: points.slice(0, 46), future: points.slice(45) });
     };
 
-    tick(); 
+    tick();
     updateOrbit();
     const timers = [setInterval(tick, 1000), setInterval(updateOrbit, 60000)];
     return () => timers.forEach(clearInterval);
@@ -82,7 +82,7 @@ const App: React.FC = () => {
       {/* 3Dキャンバスレイヤー */}
       <Viewer full timeline={false} animation={false} selectionIndicator={false} infoBox={false}>
         {settings.station && <GroundStationLayer isAOS={isAOS} issPos={position} />}
-        
+
         {settings.orbit && (
           <>
             <Entity><PolylineGraphics positions={orbit.past} width={2} material={Color.CYAN.withAlpha(0.3)} /></Entity>
@@ -93,10 +93,10 @@ const App: React.FC = () => {
         {position && (
             <Entity position={position} name="ISS">
             <PointGraphics pixelSize={12} color={isAOS ? Color.LIME : Color.YELLOW} outlineColor={Color.BLACK} outlineWidth={2} />
-            
+
             {/* フットプリントの描画 */}
             {settings.footprint && (
-              <EllipseGraphics 
+              <EllipseGraphics
                 semiMajorAxis={2200000} // 約2200km
                 semiMinorAxis={2200000}
                 height={0}

@@ -1,5 +1,5 @@
 // src/types/index.ts
-// ISSの状態を表す型定義。他のファイルから使えるように export をつけます。
+// ISSの状態を表す型定義
 export interface IssState {
   speed: number;
   altitude: number;

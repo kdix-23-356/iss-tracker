@@ -14,14 +14,14 @@ describe('Orbital Logic (ビジネスロジック層) の単体テスト', () =>
   describe('calculateIssTelemetry()', () => {
     test('正常なTLEと時刻を渡すと、速度・高度を含むテレメトリデータが返却される', () => {
       const result = calculateIssTelemetry(mockSatrec, mockDate);
-      
+
       // 結果がnullでないことを確認
       expect(result).not.toBeNull();
-      
+
       // 計算された値が数値型(number)として正しく生成されているか確認
       expect(typeof result?.telemetry.speed).toBe('number');
       expect(typeof result?.telemetry.altitude).toBe('number');
-      
+
       // 高度が異常な値（マイナスや極端に大きい値）になっていないか、およその範囲をテスト
       expect(result?.telemetry.altitude).toBeGreaterThan(300); // 300km以上
       expect(result?.telemetry.altitude).toBeLessThan(500);  // 500km以下
@@ -31,17 +31,17 @@ describe('Orbital Logic (ビジネスロジック層) の単体テスト', () =>
   describe('checkAosStatus()', () => {
     test('衛星が地球の裏側にある場合、AOS(通信可能状態)は false となるべき', () => {
       const gmst = satellite.gstime(mockDate);
-      
+
       // 筑波宇宙センターの「地球の真裏」の座標を計算
-      const farGd = { 
-        latitude: -satellite.degreesToRadians(TSUKUBA_STATION.lat), 
-        longitude: satellite.degreesToRadians(TSUKUBA_STATION.lon) + Math.PI, 
-        height: 400 
+      const farGd = {
+        latitude: -satellite.degreesToRadians(TSUKUBA_STATION.lat),
+        longitude: satellite.degreesToRadians(TSUKUBA_STATION.lon) + Math.PI,
+        height: 400
       };
-      
+
       // その座標のECF（地球固定座標）をECI（慣性座標）ベクトルとみなしてテスト
       const farEci = satellite.geodeticToEcf(farGd); // 簡易的なモックとして代用
-      
+
       const isAos = checkAosStatus(farEci, gmst);
       expect(isAos).toBe(false);
     });

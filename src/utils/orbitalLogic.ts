@@ -1,15 +1,21 @@
-// src/utils/orbitalLogic.ts
 import { Cartesian3 } from 'cesium';
 import * as satellite from 'satellite.js';
-import { TSUKUBA_STATION } from '../constants'; // さっき作った定数を読み込む
+import { TSUKUBA_STATION } from '../constants';
 
-// ISSの現在の数値を計算
-export const calculateIssTelemetry = (satrec: satellite.Satrec, date: Date) => {
-  const { position: pEci, velocity: vEci } = satellite.propagate(satrec, date);
-  if (typeof pEci === 'boolean' || typeof vEci === 'boolean') return null;
+export const calculateIssTelemetry = (satrec: satellite.SatRec, date: Date) => {
+  // 計算結果を受け取る
+  const propResult = satellite.propagate(satrec, date);
+
+  // 結果が null または boolean (計算失敗) の場合は弾く
+  if (!propResult || typeof propResult.position === 'boolean' || typeof propResult.velocity === 'boolean') {
+    return null;
+  }
+
+  // 安全が保証された状態でのみ値を取り出す
+  const { position: pEci, velocity: vEci } = propResult;
 
   const gmst = satellite.gstime(date);
-  const gd = satellite.eciToGeodetic(pEci, gmst);
+  const gd = satellite.eciToGeodetic(pEci as satellite.EciVec3<number>, gmst);
 
   return {
     cartesian: Cartesian3.fromRadians(gd.longitude, gd.latitude, gd.height * 1000),
@@ -20,30 +26,33 @@ export const calculateIssTelemetry = (satrec: satellite.Satrec, date: Date) => {
       longitude: satellite.degreesLong(gd.longitude),
       timestamp: date
     },
-    pEci, gmst
+    pEci: pEci as satellite.EciVec3<number>,
+    gmst
   };
 };
 
-// AOS（通信圏内）判定
 export const checkAosStatus = (pEci: satellite.EciVec3<number>, gmst: number) => {
   const stationGd = {
     latitude: satellite.degreesToRadians(TSUKUBA_STATION.lat),
     longitude: satellite.degreesToRadians(TSUKUBA_STATION.lon),
     height: TSUKUBA_STATION.height
   };
-  const lookAngles = satellite.ecfToLookAngles(satellite.geodeticToEcf(stationGd), satellite.eciToEcf(pEci, gmst));
+  // 第1引数には変換前の stationGd (GeodeticLocation) をそのまま渡す
+  const lookAngles = satellite.ecfToLookAngles(stationGd, satellite.eciToEcf(pEci, gmst));
   return satellite.radiansToDegrees(lookAngles.elevation) >= 10;
 };
 
-// 軌道の配列計算
-export const calculateOrbitPoints = (satrec: satellite.Satrec, startTime: Date, durationMin: number, stepMin: number) => {
+export const calculateOrbitPoints = (satrec: satellite.SatRec, startTime: Date, durationMin: number, stepMin: number) => {
   const points: Cartesian3[] = [];
   for (let i = -durationMin; i <= durationMin; i += stepMin) {
     const time = new Date(startTime.getTime() + i * 60 * 1000);
-    const { position: pEci } = satellite.propagate(satrec, time);
-    if (typeof pEci !== 'boolean') {
+    const propResult = satellite.propagate(satrec, time);
+
+    // null チェック
+    if (propResult && typeof propResult.position !== 'boolean') {
+      const { position: pEci } = propResult;
       const gmst = satellite.gstime(time);
-      const gd = satellite.eciToGeodetic(pEci, gmst);
+      const gd = satellite.eciToGeodetic(pEci as satellite.EciVec3<number>, gmst);
       points.push(Cartesian3.fromRadians(gd.longitude, gd.latitude, gd.height * 1000));
     }
   }
