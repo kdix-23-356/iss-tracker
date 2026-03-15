@@ -5,5 +5,5 @@ import cesium from 'vite-plugin-cesium'
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/iss-tracker/',
-  plugins: [react(), cesium({ rebuildCesium: true })],
+  plugins: [react(), cesium()],
 })
