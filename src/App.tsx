@@ -9,9 +9,6 @@ import { Dashboard } from './components/Dashboard';
 import { ConfigPanel } from './components/ConfigPanel';
 import { GroundStationLayer } from './components/GroundStationLayer';
 import { EventLogPanel, type LogEvent } from './components/EventLogPanel';
-if (typeof window !== 'undefined') {
-  (window as any).CESIUM_BASE_URL = '/iss-tracker/cesium/';
-}
 
 const App: React.FC = () => {
   const [tle, setTle] = useState<any>(null);
