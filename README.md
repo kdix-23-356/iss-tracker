@@ -238,11 +238,6 @@ Unit tests cover orbital‑math properties, AOS/LOS consistency, event detection
 
 ---
 
-## 📜 License
-TBD（必要に応じて MIT License 等を追加してください）
-
----
-
 ## 🙏 Acknowledgements
 - Cesium / Resium
 - satellite.js
