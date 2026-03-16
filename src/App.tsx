@@ -64,6 +64,8 @@ const TimeTravelPanelLazy = lazy(() =>
 const TLE_URL = 'https://api.wheretheiss.at/v1/satellites/25544/tles';
 const TICK_MS = 1000;                      // リアルタイム更新間隔（1秒）
 const ORBIT_UPDATE_INTERVAL_MS = 60_000;   // 軌道再計算の最短間隔（60秒）
+
+// TLEの型
 type Tle = { line1: string; line2: string };
 
 /* ======================================================
@@ -101,13 +103,12 @@ const App: React.FC = () => {
   /** 全地上局の「現在」判定結果 */
   const [stationStatuses, setStationStatuses] = useState<Record<string, GroundStationStatus>>({});
 
-  // ---------- UI settings ----------
-  /** Layer は ON、Panels は Telemetry のみ ON（他は OFF） */
+  // UI設定：LayerはON、Panelsはデフォルト（TelemetryのみON）
   const [settings, setSettings] = useState<UiSettings>({
     orbit: true,
     station: true,
     footprint: true,
-    telemetry: true,
+    telemetry: true,     // TelemetryはON
     stationBoard: false,
     stationLogs: false,
     systemLog: false,
@@ -258,7 +259,7 @@ const App: React.FC = () => {
       }
     }
 
-    // 互換：筑波 AOS（ISS アイコン色）
+    // 互換：筑波AOS（ISS ポイント色）
     const tsukuba = list.find(s => s.id === 'tsukuba');
     setIsAOS(tsukuba ? tsukuba.isAOS : false);
 
@@ -275,7 +276,7 @@ const App: React.FC = () => {
       lastOrbitUpdateMsRef.current = nowMs;
     }
 
-    // 必要時のみ再描画（requestRenderMode 前提）
+    // Cesium の再描画（requestRenderMode前提）
     viewerRef.current?.cesiumElement?.scene.requestRender();
   };
 
@@ -286,7 +287,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!satrec) return;
 
-    // 既存 Timer の確実な解除（StrictMode/HMR 対策）
+    // 既存の Timer を確実に解除（StrictMode/HMR 対策）
     if (realTimersRef.current.length) {
       realTimersRef.current.forEach(clearInterval);
       realTimersRef.current = [];
@@ -317,7 +318,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!satrec) return;
 
-    // Seek：選択時刻が変わったら即描画（ログは記録しない）
+    // Seek：選択時刻が変わったら、その時刻で即描画（ログは記録しない）
     if (clock.mode === 'time-travel') {
       renderAt(new Date(clock.selectedMs), { recordEvents: false });
     }
@@ -330,7 +331,8 @@ const App: React.FC = () => {
     if (clock.mode === 'time-travel' && clock.playing) {
       playTimerRef.current = window.setInterval(() => {
         setClock(c => {
-          const nextMs = c.selectedMs + c.rate * 1000; // “秒/秒”で前進
+          const nextMs = c.selectedMs + c.rate * 1000; // rate秒/秒
+          // スライダ範囲外に出たら停止（折返しでも可）
           const nowMs = Date.now();
           const minMs = nowMs - c.windowMin * 60_000;
           const maxMs = nowMs + c.windowMin * 60_000;
