@@ -6,12 +6,8 @@ import * as satellite from 'satellite.js';
 import type { Viewer as CesiumViewer } from 'cesium';
 
 import type { IssState } from './types';
-import { calculateIssTelemetry, checkAosStatus, calculateOrbitPoints } from './utils/orbitalLogic';
-import { Dashboard } from './components/Dashboard';
-import { ConfigPanel } from './components/ConfigPanel';
-import { GroundStationLayer } from './components/GroundStationLayer';
-import { EventLogPanel, type LogEvent } from './components/EventLogPanel';
-
+import { calculateIssTelemetry, checkAosStatus, calculateOrbitPoints } from './utils';
+import { Dashboard, ConfigPanel, GroundStationLayer, EventLogPanel, type LogEvent } from './components';
 // TLEの型
 type Tle = { line1: string; line2: string };
 

@@ -14,7 +14,7 @@ export const ConfigPanel: React.FC<{
       backgroundColor: 'rgba(0, 18, 40, 0.8)', color: '#00e5ff', padding: '15px',
       borderRadius: '8px', border: '1px solid #00e5ff', fontFamily: 'monospace'
     }}>
-      <div style={{ marginBottom: '10px', fontSize: '0.8rem', opacity: 0.7 }}>LAYER CONTROL</div>
+    <div style={{ marginBottom: '10px', fontSize: '0.8rem', opacity: 0.7 }}>LAYER CONTROL</div>
       <label style={{ display: 'block', cursor: 'pointer' }}>
         <input type="checkbox" checked={settings.orbit} onChange={() => toggle('orbit')} /> Show Orbit Path
       </label>
