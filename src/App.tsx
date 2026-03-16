@@ -60,11 +60,14 @@ const App: React.FC = () => {
         // APIは { line1, line2 } を返す前提
         setTle({ line1: json.line1, line2: json.line2 });
 
-        // 成功ログ（任意）
-        setLogs(prev => [
-          { id: Date.now(), time: new Date(), message: 'TLE fetched', type: 'info' },
-          ...prev,
-        ].slice(0, 5));
+        // 成功ログ（型を明示）
+        const infoLog: LogEvent = {
+          id: Date.now(),
+          time: new Date(),
+          message: 'TLE fetched',
+          type: 'info',
+        };
+        setLogs(prev => [infoLog, ...prev].slice(0, 5));
       } catch (e: unknown) {
         // --- Abort（正常キャンセル）の判定を広げる ---
         const isAbortError =
@@ -82,19 +85,25 @@ const App: React.FC = () => {
             (controller.signal as any).reason ??
             ((e as Error)?.message || (typeof e === 'string' ? e : 'aborted'));
 
-          setLogs(prev => [
-            { id: Date.now(), time: new Date(), message: `TLE fetch aborted: ${String(reason)}`, type: 'info' },
-            ...prev,
-          ].slice(0, 5));
+          const abortedLog: LogEvent = {
+            id: Date.now(),
+            time: new Date(),
+            message: `TLE fetch aborted: ${String(reason)}`,
+            type: 'info',
+          };
+          setLogs(prev => [abortedLog, ...prev].slice(0, 5));
           return;
         }
 
         // --- 本当の失敗のみここに来る ---
         const msg = (e as Error)?.message ?? String(e);
-        setLogs(prev => [
-          { id: Date.now(), time: new Date(), message: `TLE fetch failed: ${msg}`, type: 'warning' },
-          ...prev,
-        ].slice(0, 5));
+        const warnLog: LogEvent = {
+          id: Date.now(),
+          time: new Date(),
+          message: `TLE fetch failed: ${msg}`,
+          type: 'warning',
+        };
+        setLogs(prev => [warnLog, ...prev].slice(0, 5));
       }
     })();
 
