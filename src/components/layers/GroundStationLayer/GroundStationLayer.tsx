@@ -2,8 +2,8 @@
 import React from 'react';
 import { Entity, PointGraphics, PolylineGraphics, LabelGraphics } from 'resium';
 import { Cartesian2, Cartesian3, Color, VerticalOrigin } from 'cesium';
-import { STATIONS } from '../constants';
-import type { GroundStationStatus } from '../types';
+import { STATIONS } from '@/constants';
+import type { GroundStationStatus } from '@/types';
 
 export const GroundStationLayer: React.FC<{
   stationStatuses: Record<string, GroundStationStatus>;

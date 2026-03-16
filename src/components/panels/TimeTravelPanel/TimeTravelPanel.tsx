@@ -1,7 +1,7 @@
 // src/components/TimeTravelPanel.tsx
 import React from 'react';
-import type { SimClock, ClockMode } from '../types';
-import { TIME_TRAVEL_RATES } from '../constants';
+import type { SimClock, ClockMode } from '@/types';
+import { TIME_TRAVEL_RATES } from '@/constants';
 
 function fmt(dtMs: number) {
   const d = new Date(dtMs);

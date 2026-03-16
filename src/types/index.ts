@@ -46,3 +46,13 @@ export interface SimClock {
   /** スライダの可動範囲（±分） */
   windowMin: number;
 }
+
+// System Event Log の型を共通化
+export type LogLevel = 'info' | 'success' | 'warning';
+
+export interface LogEvent {
+  id: number;         // Date.now() の値等
+  time: Date;         // 表示用に Date を保持
+  message: string;    // 表示メッセージ
+  type: LogLevel;     // 表示レベル
+}
