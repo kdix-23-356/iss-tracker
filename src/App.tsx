@@ -31,8 +31,7 @@ import type {
   LogEvent,
 } from '@/types';
 
-import { diffStationAos } from '@/utils/stationEvents';
-import { calculateIssTelemetry, calculateOrbitPoints, computeStationsStatus } from './utils';
+import { calculateIssTelemetry, calculateOrbitPoints, computeStationsStatus, diffStationAos } from './utils';
 import {
   AOS_ELEVATION_THRESHOLD_DEG,
   STATIONS,

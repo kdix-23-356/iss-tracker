@@ -2,14 +2,12 @@
 import React from 'react';
 import { STATIONS } from '@/constants';
 import type { GroundStationStatus } from '@/types';
+import { rankStationsByElevation } from '@/utils';
 
 export const StationBoard: React.FC<{
   stationStatuses: Record<string, GroundStationStatus>;
 }> = ({ stationStatuses }) => {
-  const rows = STATIONS
-    .map(st => ({ st, s: stationStatuses[st.id] }))
-    .filter(({ s }) => !!s)
-    .sort((a, b) => b.s!.elevationDeg - a.s!.elevationDeg);
+  const rows = rankStationsByElevation(STATIONS, stationStatuses);
 
   return (
     <div
