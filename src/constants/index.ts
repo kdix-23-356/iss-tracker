@@ -14,8 +14,12 @@ export const STATIONS: GroundStation[] = [
   { id: 'malargue', name: 'ESA Malargüe (DSA 3)', agency: 'ESA', lat: -35.775, lon: -69.398 },
 ];
 
-/** --- 局別イベントログ --- */
-export const STATION_EVENT_LOG_MAX = 10;           // 内部保持の上限
-export const STATION_EVENT_LOG_VISIBLE_MIN = 5;    // UIでの最小表示件数
-export const STATION_EVENT_LOG_VISIBLE_MAX = 10;   // UIでの最大表示件数
+export const STATION_EVENT_LOG_MAX = 10;
+export const STATION_EVENT_LOG_VISIBLE_MIN = 5;
+export const STATION_EVENT_LOG_VISIBLE_MAX = 10;
 export const STATION_EVENT_LOG_DEFAULT_VISIBLE = 5;
+
+/** タイムトラベルUIの既定ウィンドウ（±分）と既定速度 */
+export const TIME_TRAVEL_DEFAULT_WINDOW_MIN = 360; // ±6時間
+export const TIME_TRAVEL_DEFAULT_RATE = 60;        // 60x（1秒で1分進む）
+export const TIME_TRAVEL_RATES = [1, 10, 60, 300]; // 1x, 10x, 60x, 300x

@@ -16,6 +16,7 @@ export type UiSettings = {
   stationBoard: boolean;
   stationLogs: boolean;
   systemLog: boolean;
+  timeControl: boolean; // ← 追加
   // per-station log
   stationLogVisibleCount: number; // 5..10
 };
@@ -24,31 +25,30 @@ export const ConfigPanel: React.FC<{
   settings: UiSettings;
   setSettings: React.Dispatch<React.SetStateAction<UiSettings>>;
 }> = ({ settings, setSettings }) => {
-  const toggle = (key: keyof UiSettings) => {
-    setSettings(s => ({ ...s, [key]: !s[key] as any }));
-  };
-
+  const toggle = (key: keyof UiSettings) => setSettings(s => ({ ...s, [key]: !s[key] as any }));
   const setCount = (v: number) => {
     const clamped = Math.max(STATION_EVENT_LOG_VISIBLE_MIN, Math.min(STATION_EVENT_LOG_VISIBLE_MAX, v));
     setSettings(s => ({ ...s, stationLogVisibleCount: clamped }));
   };
 
   return (
-    <div style={{
-      position: 'absolute',
-      bottom: 'clamp(8px, 10vh, 64px)',
-      left: 'clamp(8px, 2vw, 24px)',
-      zIndex: 1000,
-      backgroundColor: 'rgba(0, 18, 40, 0.8)',
-      color: '#00e5ff',
-      padding: '12px',
-      borderRadius: '8px',
-      border: '1px solid #00e5ff',
-      fontFamily: '"Share Tech Mono", monospace',
-      minWidth: 240,
-      maxWidth: 'min(92vw, 360px)',
-      boxSizing: 'border-box',
-    }}>
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 'clamp(8px, 10vh, 64px)',
+        left: 'clamp(8px, 2vw, 24px)',
+        zIndex: 1000,
+        backgroundColor: 'rgba(0, 18, 40, 0.8)',
+        color: '#00e5ff',
+        padding: '12px',
+        borderRadius: '8px',
+        border: '1px solid #00e5ff',
+        fontFamily: '"Share Tech Mono", monospace',
+        minWidth: 240,
+        maxWidth: 'min(92vw, 360px)',
+        boxSizing: 'border-box',
+      }}
+    >
       <div style={{ marginBottom: '10px', fontSize: '0.85rem', opacity: 0.8 }}>LAYER CONTROL</div>
       <label style={{ display: 'block', cursor: 'pointer' }}>
         <input type="checkbox" checked={settings.orbit} onChange={() => toggle('orbit')} /> Show Orbit Path
@@ -72,6 +72,9 @@ export const ConfigPanel: React.FC<{
       </label>
       <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
         <input type="checkbox" checked={settings.systemLog} onChange={() => toggle('systemLog')} /> System Event Log
+      </label>
+      <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
+        <input type="checkbox" checked={settings.timeControl} onChange={() => toggle('timeControl')} /> Time Control
       </label>
 
       {settings.stationLogs && (
