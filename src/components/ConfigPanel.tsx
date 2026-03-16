@@ -22,7 +22,7 @@ export const ConfigPanel: React.FC<{
         <input type="checkbox" checked={settings.footprint} onChange={() => toggle('footprint')} /> Show Footprint
       </label>
       <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
-        <input type="checkbox" checked={settings.station} onChange={() => toggle('station')} /> Ground Station (JAXA)
+        <input type="checkbox" checked={settings.station} onChange={() => toggle('station')} /> Ground Station
       </label>
       <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
         <input type="checkbox" checked={settings.log} onChange={() => toggle('log')} /> Show Event Log

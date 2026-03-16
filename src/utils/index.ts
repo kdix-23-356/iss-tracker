@@ -1,3 +1,4 @@
+// src/utils/index.ts
 export {
   calculateIssTelemetry,
   checkAosStatus,
@@ -8,4 +9,5 @@ export {
   lerpLat,
   lerpAltM,
   computeLookAnglesDeg,
+  computeStationsStatus,
 } from './orbitalLogic';

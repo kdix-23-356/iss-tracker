@@ -1,9 +1,10 @@
+// src/utils/orbitalLogic.ts
 import { Cartesian3 } from 'cesium';
 import * as satellite from 'satellite.js';
-import { TSUKUBA_STATION } from '../constants';
+import { TSUKUBA_STATION, AOS_ELEVATION_THRESHOLD_DEG } from '../constants';
+import type { GroundStation, GroundStationStatus } from '../types';
 
 export const calculateIssTelemetry = (satrec: satellite.SatRec, date: Date) => {
-  // 計算結果を受け取る
   const propResult = satellite.propagate(satrec, date);
 
   // 結果が null または boolean (計算失敗) の場合は弾く
@@ -31,21 +32,7 @@ export const calculateIssTelemetry = (satrec: satellite.SatRec, date: Date) => {
   };
 };
 
-export const checkAosStatus = (
-  pEci: satellite.EciVec3<number>,
-  gmst: number,
-  thresholdDeg: number = AOS_ELEVATION_THRESHOLD_DEG,
-) => {
-  const { elevationDeg } = computeLookAnglesDeg(
-    { lat: TSUKUBA_STATION.lat, lon: TSUKUBA_STATION.lon, heightKm: TSUKUBA_STATION.height },
-    pEci,
-    gmst,
-  );
-  return elevationDeg >= thresholdDeg;
-};
-
-
-// 地上局（度表記）から見た方位角・仰角・距離を計算（度/ km）
+// 地上局（度表記）から見た方位角・仰角・距離を計算（度 / km）
 export type GeodeticStationDeg = {
   lat: number;
   lon: number;
@@ -71,6 +58,41 @@ export function computeLookAnglesDeg(
   };
 }
 
+// 任意の地上局リストに対して AOS/仰角を計算
+export function computeStationsStatus(
+  stations: GroundStation[],
+  pEci: satellite.EciVec3<number>,
+  gmst: number,
+  thresholdDeg: number = AOS_ELEVATION_THRESHOLD_DEG,
+): GroundStationStatus[] {
+  return stations.map((st) => {
+    const { elevationDeg, rangeKm } = computeLookAnglesDeg(
+      { lat: st.lat, lon: st.lon, heightKm: (st.heightM ?? 0) / 1000 },
+      pEci,
+      gmst
+    );
+    return {
+      id: st.id,
+      elevationDeg,
+      rangeKm,
+      isAOS: elevationDeg >= thresholdDeg,
+    };
+  });
+}
+
+// 筑波のみのAOS判定
+export const checkAosStatus = (
+  pEci: satellite.EciVec3<number>,
+  gmst: number,
+  thresholdDeg: number = AOS_ELEVATION_THRESHOLD_DEG,
+) => {
+  const { elevationDeg } = computeLookAnglesDeg(
+    { lat: TSUKUBA_STATION.lat, lon: TSUKUBA_STATION.lon, heightKm: TSUKUBA_STATION.height },
+    pEci,
+    gmst,
+  );
+  return elevationDeg >= thresholdDeg;
+};
 
 export const calculateOrbitPoints = (
   satrec: satellite.SatRec,
@@ -164,3 +186,4 @@ export function lerpLat(from: number, to: number, t: number): number {
 export function lerpAltM(from: number, to: number, t: number): number {
   return from + (to - from) * t;
 }
+``
