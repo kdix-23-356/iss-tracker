@@ -27,12 +27,11 @@ import type {
   IssState,
   GroundStationStatus,
   StationEventLogMap,
-  GroundStationEvent,
   SimClock,
   LogEvent,
 } from '@/types';
 
-import { calculateIssTelemetry, calculateOrbitPoints, computeStationsStatus } from './utils';
+import { calculateIssTelemetry, calculateOrbitPoints, computeStationsStatus, diffStationAos } from './utils';
 import {
   AOS_ELEVATION_THRESHOLD_DEG,
   STATIONS,
@@ -224,26 +223,10 @@ const App: React.FC = () => {
     // 局別イベント（リアルタイム時のみ記録：証跡の純度を担保）
     const shouldRecord = options?.recordEvents ?? (clock.mode === 'realtime');
     if (shouldRecord) {
-      const prev = prevStationIsAOSRef.current;
       const nowMs = target.getTime();
-      const eventsToAppend: Array<{ id: string; event: GroundStationEvent }> = [];
+      const [eventsToAppend, nextMap] = diffStationAos(prevStationIsAOSRef.current, list, nowMs);
+      prevStationIsAOSRef.current = nextMap;
 
-      for (const s of list) {
-        const prevIsAOS = prev[s.id];
-        const currIsAOS = s.isAOS;
-        // 初回（prev 未定義）は記録しない → ノイズ抑制
-        if (typeof prevIsAOS === 'boolean' && prevIsAOS !== currIsAOS) {
-          eventsToAppend.push({
-            id: s.id,
-            event: {
-              type: currIsAOS ? 'AOS' : 'LOS',
-              at: nowMs,
-              elevationDeg: s.elevationDeg,
-              rangeKm: s.rangeKm,
-            }
-          });
-        }
-      }
       prevStationIsAOSRef.current = Object.fromEntries(list.map(s => [s.id, s.isAOS]));
 
       if (eventsToAppend.length > 0) {
