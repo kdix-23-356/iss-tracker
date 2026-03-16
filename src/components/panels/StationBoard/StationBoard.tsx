@@ -1,7 +1,7 @@
 // src/components/StationBoard.tsx
 import React from 'react';
-import { STATIONS } from '../constants';
-import type { GroundStationStatus } from '../types';
+import { STATIONS } from '@/constants';
+import type { GroundStationStatus } from '@/types';
 
 export const StationBoard: React.FC<{
   stationStatuses: Record<string, GroundStationStatus>;

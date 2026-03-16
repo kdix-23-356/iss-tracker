@@ -4,7 +4,7 @@ import {
   STATION_EVENT_LOG_VISIBLE_MIN,
   STATION_EVENT_LOG_VISIBLE_MAX,
   STATION_EVENT_LOG_DEFAULT_VISIBLE
-} from '../constants';
+} from '@/constants';
 
 export type UiSettings = {
   // layers

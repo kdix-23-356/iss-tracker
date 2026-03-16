@@ -1,6 +1,6 @@
 // src/components/Dashboard.tsx
 import React from 'react';
-import type { IssState } from '../types';
+import type { IssState } from '@/types';
 
 export const Dashboard: React.FC<{ state: IssState }> = ({ state }) => {
   return (

@@ -1,7 +1,7 @@
 // src/components/StationLogsPanel.tsx
 import React from 'react';
-import type { StationEventLogMap } from '../types';
-import { STATIONS } from '../constants';
+import type { StationEventLogMap } from '@/types';
+import { STATIONS } from '@/constants';
 
 function formatTime(ms: number) {
   const d = new Date(ms);

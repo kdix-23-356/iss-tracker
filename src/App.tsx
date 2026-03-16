@@ -1,5 +1,13 @@
 // src/App.tsx
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+/**
+ * ISS Tracker – App root
+ *
+ * 遅延ロード対応版：
+ *  - StationBoard / StationLogsPanel / TimeTravelPanel を React.lazy で後読み
+ *  - Suspense で遅延領域をラップ（fallback は null：チラつきなし）
+ *  - 初回ロードの index-*.js を軽量化
+ */
+import React, { useEffect, useState, useRef, useMemo, lazy, Suspense } from 'react';
 import { Viewer, Entity, PointGraphics, PolylineGraphics, EllipseGraphics } from 'resium';
 import type { CesiumComponentRef } from 'resium';
 import { Cartesian3, Color } from 'cesium';
@@ -12,7 +20,8 @@ import type {
   StationEventLogMap,
   GroundStationEvent,
   SimClock,
-} from './types';
+  LogEvent,
+} from '@/types';
 import { calculateIssTelemetry, calculateOrbitPoints, computeStationsStatus } from './utils';
 import {
   AOS_ELEVATION_THRESHOLD_DEG,
@@ -21,15 +30,23 @@ import {
   STATION_EVENT_LOG_DEFAULT_VISIBLE,
   TIME_TRAVEL_DEFAULT_RATE,
   TIME_TRAVEL_DEFAULT_WINDOW_MIN,
-} from './constants';
+} from '@/constants';
 
-import { Dashboard } from './components/Dashboard';
-import { ConfigPanel, type UiSettings } from './components/ConfigPanel';
-import { GroundStationLayer } from './components/GroundStationLayer';
-import { EventLogPanel, type LogEvent } from './components/EventLogPanel';
-import { StationBoard } from './components/StationBoard';
-import { StationLogsPanel } from './components/StationLogsPanel';
-import { TimeTravelPanel } from './components/TimeTravelPanel';
+// panels: ダッシュボード/コンフィグのみ即時 import（軽量）
+import { Dashboard, ConfigPanel, type UiSettings } from '@/components/panels';
+import { GroundStationLayer } from '@/components/layers';
+import { EventLogPanel } from './components/EventLogPanel';
+
+// ✅ 遅延ロード対象（ON 時に読み込む）
+const StationBoardLazy = lazy(() =>
+  import('@/components/panels/StationBoard').then(m => ({ default: m.StationBoard }))
+);
+const StationLogsPanelLazy = lazy(() =>
+  import('@/components/panels/StationLogsPanel').then(m => ({ default: m.StationLogsPanel }))
+);
+const TimeTravelPanelLazy = lazy(() =>
+  import('@/components/panels/TimeTravelPanel').then(m => ({ default: m.TimeTravelPanel }))
+);
 
 // TLEの型
 type Tle = { line1: string; line2: string };
@@ -46,12 +63,12 @@ const App: React.FC = () => {
   // 全地上局のステータス
   const [stationStatuses, setStationStatuses] = useState<Record<string, GroundStationStatus>>({});
 
-  // UI設定：LayerはON、PanelsはデフォルトOFF（前回の希望どおり）
+  // UI設定：LayerはON、Panelsはデフォルト（TelemetryのみONに戻し済み）
   const [settings, setSettings] = useState<UiSettings>({
     orbit: true,
     station: true,
     footprint: true,
-    telemetry: false,
+    telemetry: true,     // ← TelemetryはON
     stationBoard: false,
     stationLogs: false,
     systemLog: false,
@@ -188,7 +205,7 @@ const App: React.FC = () => {
       }
     }
 
-    // 互換：筑波のAOS/仰角（ポイント色に使用）
+    // 互換：筑波AOS（ISS ポイント色）
     const tsukuba = list.find(s => s.id === 'tsukuba');
     setIsAOS(tsukuba ? tsukuba.isAOS : false);
 
@@ -197,7 +214,7 @@ const App: React.FC = () => {
     const mid = Math.floor(points.length / 2);
     setOrbit({ past: points.slice(0, mid + 1), future: points.slice(mid) });
 
-    // Cesium の再描画
+    // Cesium の再描画（requestRenderMode前提）
     viewerRef.current?.cesiumElement?.scene.requestRender();
   };
 
@@ -206,7 +223,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!satrec) return;
 
-    // クリーンアップ
+    // 既存の Timer を確実に解除（StrictMode/HMR 対策）
     if (realTimersRef.current.length) {
       realTimersRef.current.forEach(clearInterval);
       realTimersRef.current = [];
@@ -234,7 +251,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!satrec) return;
 
-    // 常に：選択時刻が変わったら、その時刻で即描画（ログは記録しない）
+    // Seek：選択時刻が変わったら、その時刻で即描画（ログは記録しない）
     if (clock.mode === 'time-travel') {
       renderAt(new Date(clock.selectedMs), { recordEvents: false });
     }
@@ -248,7 +265,7 @@ const App: React.FC = () => {
       playTimerRef.current = window.setInterval(() => {
         setClock(c => {
           const nextMs = c.selectedMs + c.rate * 1000; // rate秒/秒
-          // 境界（スライダ範囲）外に出たら止める or 折返し。ここでは止める。
+          // スライダ範囲外に出たら停止（折返しでも可）
           const nowMs = Date.now();
           const minMs = nowMs - c.windowMin * 60_000;
           const maxMs = nowMs + c.windowMin * 60_000;
@@ -291,11 +308,15 @@ const App: React.FC = () => {
     >
       {/* UIレイヤー */}
       {issState && settings.telemetry && <Dashboard state={issState} />}
-      {settings.stationBoard && <StationBoard stationStatuses={stationStatuses} />}
-      {settings.stationLogs && (
-        <StationLogsPanel logsMap={stationEventLogs} showCount={settings.stationLogVisibleCount} />
-      )}
-      {settings.timeControl && <TimeTravelPanel clock={clock} setClock={setClock} />}
+
+      {/* ✅ 遅延領域は Suspense でまとめてラップ */}
+      <Suspense fallback={null}>
+        {settings.stationBoard && <StationBoardLazy stationStatuses={stationStatuses} />}
+        {settings.stationLogs && (
+          <StationLogsPanelLazy logsMap={stationEventLogs} showCount={settings.stationLogVisibleCount} />
+        )}
+        {settings.timeControl && <TimeTravelPanelLazy clock={clock} setClock={setClock} />}
+      </Suspense>
 
       <ConfigPanel settings={settings} setSettings={setSettings} />
       {settings.systemLog && <EventLogPanel logs={logs} />}
