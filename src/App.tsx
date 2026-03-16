@@ -38,7 +38,6 @@ const App: React.FC = () => {
 
   // 互換用（ISSのポイント色などに使用）
   const [isAOS, setIsAOS] = useState(false);
-  const [elevationDeg, setElevationDeg] = useState<number | null>(null);
 
   // 全地上局のステータス
   const [stationStatuses, setStationStatuses] = useState<Record<string, GroundStationStatus>>({});
@@ -209,7 +208,6 @@ const App: React.FC = () => {
 
         // 互換：筑波のAOS/仰角（ポイント色に使用）
         const tsukuba = list.find(s => s.id === 'tsukuba');
-        setElevationDeg(tsukuba ? tsukuba.elevationDeg : null);
         setIsAOS(tsukuba ? tsukuba.isAOS : false);
 
         // 変化時のみ再描画
