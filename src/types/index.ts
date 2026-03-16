@@ -1,5 +1,4 @@
 // src/types/index.ts
-// ISSの状態を表す型定義
 export interface IssState {
   speed: number;
   altitude: number;
@@ -8,19 +7,30 @@ export interface IssState {
   timestamp: Date;
 }
 
-// 地上局の定義とステータス
 export interface GroundStation {
   id: string;
   name: string;
   agency: 'JAXA' | 'NASA' | 'ESA' | 'Other';
-  lat: number;      // degrees
-  lon: number;      // degrees
-  heightM?: number; // meters
+  lat: number;
+  lon: number;
+  heightM?: number;
 }
 
 export interface GroundStationStatus {
   id: string;
-  elevationDeg: number; // 仰角（度）
-  rangeKm: number;      // 衛星までの距離（km）
-  isAOS: boolean;       // AOS/LOS
+  elevationDeg: number;
+  rangeKm: number;
+  isAOS: boolean;
 }
+
+/** --- 局別のAOS/LOSイベント --- */
+export type StationEventType = 'AOS' | 'LOS';
+
+export interface GroundStationEvent {
+  type: StationEventType;
+  at: number;            // epoch ms
+  elevationDeg: number;  // 遷移時の仰角
+  rangeKm: number;       // 遷移時の距離
+}
+
+export type StationEventLogMap = Record<string, GroundStationEvent[]>;
