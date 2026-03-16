@@ -6,7 +6,8 @@ import * as satellite from 'satellite.js';
 import type { Viewer as CesiumViewer } from 'cesium';
 
 import type { IssState } from './types';
-import { calculateIssTelemetry, checkAosStatus, calculateOrbitPoints } from './utils';
+import { calculateIssTelemetry, calculateOrbitPoints, computeLookAnglesDeg } from './utils';
+import { AOS_ELEVATION_THRESHOLD_DEG, TSUKUBA_STATION } from './constants';
 import { Dashboard, ConfigPanel, GroundStationLayer, EventLogPanel, type LogEvent } from './components';
 // TLEの型
 type Tle = { line1: string; line2: string };
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   const [issState, setIssState] = useState<IssState | null>(null);
   const [orbit, setOrbit] = useState<{ past: Cartesian3[]; future: Cartesian3[] }>({ past: [], future: [] });
   const [isAOS, setIsAOS] = useState(false);
+  const [elevationDeg, setElevationDeg] = useState<number | null>(null);
 
   const [settings, setSettings] = useState({ orbit: true, station: true, footprint: true, log: true });
   const [logs, setLogs] = useState<LogEvent[]>([
@@ -90,7 +92,14 @@ setLogs(prev => [warnLog, ...prev].slice(0, 5));
       if (result) {
         setPosition(result.cartesian);
         setIssState(result.telemetry);
-        setIsAOS(checkAosStatus(result.pEci, result.gmst));
+        // 筑波局から見た仰角を計算 → AOS判定に流用
+        const { elevationDeg } = computeLookAnglesDeg(
+        	{ lat: TSUKUBA_STATION.lat, lon: TSUKUBA_STATION.lon, heightKm: TSUKUBA_STATION.height },
+          result.pEci,
+          result.gmst
+        );
+        setElevationDeg(elevationDeg);
+        setIsAOS(elevationDeg >= AOS_ELEVATION_THRESHOLD_DEG);
         viewerRef.current?.cesiumElement?.scene.requestRender();
       }
     };
@@ -123,7 +132,7 @@ setLogs(prev => [warnLog, ...prev].slice(0, 5));
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       {/* UIレイヤー */}
-      {issState && <Dashboard state={issState} />}
+      {issState && <Dashboard state={issState} elevationDeg={elevationDeg ?? undefined} aosThresholdDeg={AOS_ELEVATION_THRESHOLD_DEG} />}
       <ConfigPanel settings={settings} setSettings={setSettings} />
       {settings.log && <EventLogPanel logs={logs} />}
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import  type { IssState } from '../types';
 
-export const Dashboard: React.FC<{ state: IssState }> = ({ state }) => (
+export const Dashboard: React.FC<{ state: IssState; elevationDeg?: number; aosThresholdDeg?: number }> = ({ state, elevationDeg, aosThresholdDeg = 10 }) => (
   <div style={{
     position: 'absolute', top: '2vh', left: '2vw', zIndex: 1000,
     backgroundColor: 'rgba(0, 18, 40, 0.8)', color: '#00e5ff',
@@ -14,6 +14,14 @@ export const Dashboard: React.FC<{ state: IssState }> = ({ state }) => (
       <span>Altitude:</span> <strong style={{color: '#fff'}}>{state.altitude.toFixed(2)} km</strong>
       <span>Lat:</span> <strong style={{color: '#fff'}}>{state.latitude.toFixed(4)}°</strong>
       <span>Lon:</span> <strong style={{color: '#fff'}}>{state.longitude.toFixed(4)}°</strong>
+      {typeof elevationDeg === 'number' && (
+        <>
+          <span>Elevation (Tsukuba):</span>
+          <strong style={{ color: elevationDeg >= aosThresholdDeg ? '#00ffaa' : '#ffaa00' }}>
+            {elevationDeg.toFixed(1)}° {elevationDeg >= aosThresholdDeg ? '— AOS' : '— LOS'}
+          </strong>
+        </>
+      )}
     </div>
     <hr style={{ borderColor: '#00e5ff22', margin: '15px 0' }} />
     <div style={{ fontSize: '0.8rem' }}>

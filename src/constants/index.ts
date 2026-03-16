@@ -5,3 +5,5 @@ export const TSUKUBA_STATION = {
   lon: 140.1272,
   height: 0.025
 };
+// AOS閾値（度）
+export const AOS_ELEVATION_THRESHOLD_DEG = 10;

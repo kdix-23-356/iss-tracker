@@ -31,16 +31,46 @@ export const calculateIssTelemetry = (satrec: satellite.SatRec, date: Date) => {
   };
 };
 
-export const checkAosStatus = (pEci: satellite.EciVec3<number>, gmst: number) => {
-  const stationGd = {
-    latitude: satellite.degreesToRadians(TSUKUBA_STATION.lat),
-    longitude: satellite.degreesToRadians(TSUKUBA_STATION.lon),
-    height: TSUKUBA_STATION.height
-  };
-  // 第1引数には変換前の stationGd (GeodeticLocation) をそのまま渡す
-  const lookAngles = satellite.ecfToLookAngles(stationGd, satellite.eciToEcf(pEci, gmst));
-  return satellite.radiansToDegrees(lookAngles.elevation) >= 10;
+export const checkAosStatus = (
+  pEci: satellite.EciVec3<number>,
+  gmst: number,
+  thresholdDeg: number = AOS_ELEVATION_THRESHOLD_DEG,
+) => {
+  const { elevationDeg } = computeLookAnglesDeg(
+    { lat: TSUKUBA_STATION.lat, lon: TSUKUBA_STATION.lon, heightKm: TSUKUBA_STATION.height },
+    pEci,
+    gmst,
+  );
+  return elevationDeg >= thresholdDeg;
 };
+
+
+// 地上局（度表記）から見た方位角・仰角・距離を計算（度/ km）
+export type GeodeticStationDeg = {
+  lat: number;
+  lon: number;
+  heightKm?: number;
+};
+
+export function computeLookAnglesDeg(
+  station: GeodeticStationDeg,
+  pEci: satellite.EciVec3<number>,
+  gmst: number,
+) {
+  const stationGd = {
+    latitude: satellite.degreesToRadians(station.lat),
+    longitude: satellite.degreesToRadians(station.lon),
+    height: station.heightKm ?? 0,
+  };
+  const ecf = satellite.eciToEcf(pEci, gmst);
+  const angles = satellite.ecfToLookAngles(stationGd, ecf);
+  return {
+    azimuthDeg: satellite.radiansToDegrees(angles.azimuth),
+    elevationDeg: satellite.radiansToDegrees(angles.elevation),
+    rangeKm: angles.rangeSat, // km
+  };
+}
+
 
 export const calculateOrbitPoints = (
   satrec: satellite.SatRec,
