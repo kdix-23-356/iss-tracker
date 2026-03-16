@@ -1,13 +1,24 @@
-// src/components/panels/TimeTravelPanel.test.tsx
+/**
+ * TimeTravelPanel の最小 UI テスト
+ *
+ * 方針:
+ * - a11y ラベルは付けていない現行 UI に合わせ、要素の取得は getByRole を使用
+ * - 複数のパネルが同時にレンダリングされるケースでも衝突しないよう
+ *   `within(container)` で **このテストが描画した範囲に限定**してクエリする
+ * - スライダは初期値（ほぼ 500）から **確実に変化**する 600 を与えて updater を発火
+ */
+
 import { describe, test, expect, vi } from 'vitest';
 import { render, fireEvent, within } from '@testing-library/react';
 import { TimeTravelPanel } from './TimeTravelPanel';
 import type { SimClock } from '@/types';
 
+/** setState の “アップデータ関数 or 値” を、テスト側で適用して次状態を得るユーティリティ */
 function applyUpdater<T>(updater: T | ((prev: T) => T), prev: T): T {
   return typeof updater === 'function' ? (updater as (p: T) => T)(prev) : updater;
 }
 
+// ベースとなる時計状態（表示は Realtime）
 const baseClock: SimClock = {
   mode: 'realtime',
   selectedMs: Date.now(),
@@ -17,20 +28,48 @@ const baseClock: SimClock = {
 };
 
 describe('TimeTravelPanel', () => {
-  // …既存の2テスト（モード切替 / Play-Pause）はそのまま…
+  test('モード切替: Realtime -> Time Travel（切替時に playing は false）', () => {
+    const setClock = vi.fn();
 
-  test('Rate 変更（select）', () => {
+    // container を受け取り、以降この範囲に限定して要素を探索
+    const { container } = render(<TimeTravelPanel clock={baseClock} setClock={setClock} />);
+    const scoped = within(container);
+
+    // 「Time Travel」ボタンを押す
+    fireEvent.click(scoped.getByRole('button', { name: /Time Travel/i }));
+
+    // setClock の最終呼び出しを取り出し、アップデータ関数を適用して次状態を得る
+    const updater = setClock.mock.calls.at(-1)?.[0];
+    const next = applyUpdater(updater, baseClock);
+
+    expect(next.mode).toBe('time-travel');
+    expect(next.playing).toBe(false);
+  });
+
+  test('Play/Pause 反転（Time-travel モード時のみボタンが出る）', () => {
     const setClock = vi.fn();
     const travelClock: SimClock = { ...baseClock, mode: 'time-travel' };
 
-    // ▼ このテストで描画した範囲に限定してクエリする（重複回避）
     const { container } = render(<TimeTravelPanel clock={travelClock} setClock={setClock} />);
     const scoped = within(container);
 
-    // select（combobox）を範囲内から1つ取得
-    const select = scoped.getByRole('combobox');
+    // 「Play」を押す
+    fireEvent.click(scoped.getByRole('button', { name: /Play/i }));
 
-    // 300x に変更
+    const updater = setClock.mock.calls.at(-1)?.[0];
+    const next = applyUpdater(updater, travelClock);
+    expect(next.playing).toBe(true);
+  });
+
+  test('Rate 変更（select: combobox）で 60x -> 300x に変更', () => {
+    const setClock = vi.fn();
+    const travelClock: SimClock = { ...baseClock, mode: 'time-travel' };
+
+    const { container } = render(<TimeTravelPanel clock={travelClock} setClock={setClock} />);
+    const scoped = within(container);
+
+    // select を取得して value を '300' に変更
+    const select = scoped.getByRole('combobox');
     fireEvent.change(select, { target: { value: '300' } });
 
     const updater = setClock.mock.calls.at(-1)?.[0];
@@ -38,7 +77,7 @@ describe('TimeTravelPanel', () => {
     expect(next.rate).toBe(300);
   });
 
-  test('スライダの onChange が selectedMs を更新する（概念検証）', () => {
+  test('スライダ onChange が selectedMs を更新する（0..1000 の 600 を与えて確実に変化）', () => {
     const now = Date.now();
     const clock: SimClock = { ...baseClock, mode: 'time-travel', selectedMs: now };
 
@@ -46,7 +85,7 @@ describe('TimeTravelPanel', () => {
     const { container } = render(<TimeTravelPanel clock={clock} setClock={setClock} />);
     const scoped = within(container);
 
-    // range スライダ（初期は概ね中央=500）。必ず変化させるため 600 に設定
+    // role=slider を取得し、値を 600 に変更（500 付近のままだと変化が起きないことがある）
     const slider = scoped.getByRole('slider');
     fireEvent.change(slider, { target: { value: '600' } });
 
@@ -57,7 +96,7 @@ describe('TimeTravelPanel', () => {
     expect(typeof next.selectedMs).toBe('number');
     expect(next.selectedMs).not.toBe(clock.selectedMs);
 
-    // 参考：ウィンドウ範囲内に収まっていること（緩くチェック）
+    // windowMin に基づくレンジ内に入っていることを緩く検証
     const minMs = Date.now() - clock.windowMin * 60_000;
     const maxMs = Date.now() + clock.windowMin * 60_000;
     expect(next.selectedMs).toBeGreaterThan(minMs);

@@ -1,33 +1,84 @@
-import React from 'react';
+/**
+ * EventLogPanel
+ *
+ * 目的:
+ *  - システムイベント（INFO/SUCCESS/WARNING）を右下に簡潔表示する。
+ *  - 非インタラクティブ（pointerEvents: 'none'）で背面操作を阻害しない。
+ *
+ * 単位/前提:
+ *  - LogEvent.time は Date インスタンス（App 側で生成）。
+ *  - 表示時刻はローカル時刻の「HH:mm:ss」に揃える（視認性重視）。
+ *
+ * 設計メモ:
+ *  - ログの色決定は type で分岐（success=緑/ warning=黄/ info=白）。
+ *  - フォーマッタ fmtTime を内製し、toLocale の環境差を避ける。
+ *  - 重複定義を避けるため、LogEvent 型は `@/types` から import。
+ */
 
-export interface LogEvent {
-  id: number;
-  time: Date;
-  message: string;
-  type: 'info' | 'success' | 'warning';
-}
+import React, { useMemo } from 'react';
+import type { LogEvent } from '@/types';
 
-export const EventLogPanel: React.FC<{ logs: LogEvent[] }> = ({ logs }) => (
-  <div style={{
-    position: 'absolute', bottom: '10vh', right: '2vw', zIndex: 1000,
-    backgroundColor: 'rgba(0, 18, 40, 0.8)', color: '#00e5ff',
-    padding: '15px', borderRadius: '8px', fontFamily: '"Share Tech Mono", monospace',
-    border: '1px solid #00e5ff', minWidth: '300px', pointerEvents: 'none'
-  }}>
-    <div style={{ marginBottom: '8px', fontSize: '0.8rem', borderBottom: '1px solid #00e5ff55', paddingBottom: '4px' }}>
-      SYSTEM EVENT LOG
+const fmtTime = (d: Date) => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+};
+
+export const EventLogPanel: React.FC<{ logs: LogEvent[] }> = React.memo(function EventLogPanel({ logs }) {
+  // 表示色マップ（メモ化でインスタンス固定）
+  const colorMap = useMemo(
+    () => ({
+      success: '#00ffaa',
+      warning: '#ffaa00',
+      info: '#ffffff',
+    }),
+    []
+  );
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: '10vh',
+        right: '2vw',
+        zIndex: 1000,
+        backgroundColor: 'rgba(0, 18, 40, 0.8)',
+        color: '#00e5ff',
+        padding: '15px',
+        borderRadius: '8px',
+        fontFamily: '"Share Tech Mono", monospace',
+        border: '1px solid #00e5ff',
+        minWidth: 300,
+        pointerEvents: 'none',
+        boxSizing: 'border-box',
+      }}
+    >
+      <div
+        style={{
+          marginBottom: '8px',
+          fontSize: '0.8rem',
+          borderBottom: '1px solid #00e5ff55',
+          paddingBottom: '4px',
+          textAlign: 'left',
+        }}
+      >
+        SYSTEM EVENT LOG
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        {logs.map((log) => {
+          const color = colorMap[log.type] ?? '#ffffff';
+
+          return (
+            <div
+              key={log.id}
+              style={{ fontSize: '0.8rem', display: 'flex', gap: '10px', color }}
+            >
+              <span style={{ opacity: 0.7 }}>[{fmtTime(log.time)}]</span>
+              <span>{log.message}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-      {logs.map(log => {
-        // ログのタイプによって色を変える
-        const color = log.type === 'success' ? '#00ffaa' : log.type === 'warning' ? '#ffaa00' : '#ffffff';
-        return (
-          <div key={log.id} style={{ fontSize: '0.8rem', display: 'flex', gap: '10px', color }}>
-            <span style={{ opacity: 0.7 }}>[{log.time.toISOString().split('T')[1].slice(0, 8)}]</span>
-            <span>{log.message}</span>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-);
+  );
+});

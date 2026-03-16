@@ -48,7 +48,5 @@ export default defineConfig({
         },
       },
     },
-    // （任意）警告の閾値を調整したいとき
-    // chunkSizeWarningLimit: 1500,
   },
 })

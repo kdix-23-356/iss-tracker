@@ -1,14 +1,34 @@
-// src/components/TimeTravelPanel.tsx
+/**
+ * TimeTravelPanel
+ *
+ * 目的:
+ *  - 時間モード（Realtime / Time-travel）の切り替えと、Time-travel 時の
+ *    シーク・微調整・再生・レート変更・ウィンドウ幅（±分）の調整を行う。
+ *
+ * 単位:
+ *  - selectedMs / minMs / maxMs: [epoch ms]
+ *  - windowMin: [minute]
+ *  - rate: [sec/sec]（Time-travel 再生時、1秒あたりに何秒進めるか）
+ *
+ * 設計メモ:
+ *  - スライダは 0..1000 の正規化値を使い、ウィンドウ [minMs..maxMs] と線形変換する。
+ *  - Realtime に入ると playing は false に落とす（誤動作防止）。
+ *  - windowMin は入力時に 30..1440 の範囲でクランプ。
+ *  - UI は純表示＋イベント発火のみ（ロジックは App 側の renderAt が担う）。
+ */
+
 import React from 'react';
 import type { SimClock, ClockMode } from '@/types';
 import { TIME_TRAVEL_RATES } from '@/constants';
 
 function fmt(dtMs: number) {
   const d = new Date(dtMs);
-  // ローカル時刻 & 短縮表示
+  // ローカル時刻（yyyy-MM-dd HH:mm:ss）
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} `
-       + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  );
 }
 
 export const TimeTravelPanel: React.FC<{
@@ -17,21 +37,43 @@ export const TimeTravelPanel: React.FC<{
 }> = ({ clock, setClock }) => {
   const { mode, selectedMs, playing, rate, windowMin } = clock;
 
-  const setMode = (m: ClockMode) => setClock(c => ({ ...c, mode: m, playing: false }));
-  const seekTo = (ms: number) => setClock(c => ({ ...c, selectedMs: ms }));
-  const bump = (deltaMs: number) => setClock(c => ({ ...c, selectedMs: c.selectedMs + deltaMs }));
-  const setRate = (r: number) => setClock(c => ({ ...c, rate: r }));
-  const togglePlay = () => setClock(c => ({ ...c, playing: !c.playing }));
-  const setWindow = (m: number) => setClock(c => ({ ...c, windowMin: Math.max(30, Math.min(24 * 60, m)) }));
+  /** モード変更：Realtime に入ると playing は false に */
+  const setMode = (m: ClockMode) =>
+    setClock((c) => ({ ...c, mode: m, playing: false }));
 
+  /** 絶対時刻シーク */
+  const seekTo = (ms: number) => setClock((c) => ({ ...c, selectedMs: ms }));
+
+  /** 相対移動（±分） */
+  const bump = (deltaMs: number) =>
+    setClock((c) => ({ ...c, selectedMs: c.selectedMs + deltaMs }));
+
+  /** 再生レート変更（sec/sec） */
+  const setRate = (r: number) => setClock((c) => ({ ...c, rate: r }));
+
+  /** 再生/一時停止 トグル */
+  const togglePlay = () => setClock((c) => ({ ...c, playing: !c.playing }));
+
+  /** ウィンドウ幅（±分）をクランプして反映（30..1440） */
+  const setWindow = (m: number) =>
+    setClock((c) => ({
+      ...c,
+      windowMin: Math.max(30, Math.min(24 * 60, m)),
+    }));
+
+  // 現在時刻の前後 windowMin 分をシーク可能範囲とする
   const nowMs = Date.now();
   const minMs = nowMs - windowMin * 60_000;
   const maxMs = nowMs + windowMin * 60_000;
 
   // スライダ値（0..1000）に正規化して扱いやすく
-  const sliderVal = Math.round(((selectedMs - minMs) / (maxMs - minMs)) * 1000);
+  const denom = Math.max(1, maxMs - minMs); // 念のため 0 回避
+  const sliderVal = Math.round(((selectedMs - minMs) / denom) * 1000);
+
+  // スライダから絶対時刻に射影
   const onSlider = (v: number) => {
-    const ms = minMs + (v / 1000) * (maxMs - minMs);
+    const t = v / 1000; // 0..1
+    const ms = minMs + t * (maxMs - minMs);
     seekTo(Math.round(ms));
   };
 
@@ -54,7 +96,16 @@ export const TimeTravelPanel: React.FC<{
         boxSizing: 'border-box',
       }}
     >
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* モード切替 ＋ ウィンドウ幅（±分） */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button
             onClick={() => setMode('realtime')}
@@ -88,8 +139,10 @@ export const TimeTravelPanel: React.FC<{
         </div>
       </div>
 
+      {/* Time-travel 操作群 */}
       {mode === 'time-travel' && (
         <>
+          {/* シークスライダ（0..1000） */}
           <div style={{ marginTop: 8 }}>
             <input
               type="range"
@@ -100,29 +153,71 @@ export const TimeTravelPanel: React.FC<{
               style={{ width: '100%' }}
             />
           </div>
-          <div style={{ marginTop: 6, display: 'flex', justifyContent: 'space-between', fontSize: 12, opacity: 0.85 }}>
+
+          {/* 範囲表示（左=最小/右=最大） */}
+          <div
+            style={{
+              marginTop: 6,
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: 12,
+              opacity: 0.85,
+            }}
+          >
             <span>{fmt(minMs)}</span>
             <span>{fmt(maxMs)}</span>
           </div>
 
-          <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => bump(-5 * 60_000)} title="-5 minutes">◀ -5m</button>
-            <button onClick={() => bump(-60_000)} title="-1 minute">-1m</button>
-            <button onClick={() => seekTo(nowMs)} title="Jump to now">Now</button>
-            <button onClick={() => bump(60_000)} title="+1 minute">+1m</button>
-            <button onClick={() => bump(5 * 60_000)} title="+5 minutes">+5m ▶</button>
+          {/* 微調整ボタン・現在時刻ジャンプ・現在選択時刻 */}
+          <div
+            style={{
+              marginTop: 8,
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <button onClick={() => bump(-5 * 60_000)} title="-5 minutes">
+              ◀ -5m
+            </button>
+            <button onClick={() => bump(-60_000)} title="-1 minute">
+              -1m
+            </button>
+            <button onClick={() => seekTo(nowMs)} title="Jump to now">
+              Now
+            </button>
+            <button onClick={() => bump(60_000)} title="+1 minute">
+              +1m
+            </button>
+            <button onClick={() => bump(5 * 60_000)} title="+5 minutes">
+              +5m ▶
+            </button>
 
             <span style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.85 }}>
               {fmt(selectedMs)}
             </span>
           </div>
 
-          <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button onClick={togglePlay} title="Play/Pause">{playing ? 'Pause' : 'Play'}</button>
+          {/* 再生/一時停止 ＋ レート */}
+          <div
+            style={{
+              marginTop: 8,
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <button onClick={togglePlay} title="Play/Pause">
+              {playing ? 'Pause' : 'Play'}
+            </button>
             <span style={{ fontSize: 12 }}>Rate:</span>
             <select value={rate} onChange={(e) => setRate(Number(e.target.value))}>
-              {TIME_TRAVEL_RATES.map(r => (
-                <option key={r} value={r}>{r}x</option>
+              {TIME_TRAVEL_RATES.map((r) => (
+                <option key={r} value={r}>
+                  {r}x
+                </option>
               ))}
             </select>
           </div>
