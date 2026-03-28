@@ -1,0 +1,16 @@
+.basePanel {
+  position: absolute;
+  z-index: 1000;
+  background-color: rgba(0, 18, 40, 0.8);
+  color: #00e5ff;
+  border: 1px solid #00e5ff;
+  font-family: "Share Tech Mono", monospace;
+  box-sizing: border-box;
+}
+
+.header {
+  margin: 0 0 10px 0;
+  text-align: center;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.333);
+  padding-bottom: 6px;
+}

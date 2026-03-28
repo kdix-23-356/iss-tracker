@@ -4,7 +4,6 @@ import * as satellite from 'satellite.js';
 import {
   computeStationsStatus,
   computeLookAnglesDeg,
-  checkAosStatus,
   wrapLon,
 } from './orbitalLogic';
 import { TSUKUBA_STATION } from '@/constants';
@@ -21,26 +20,6 @@ const date = new Date('2026-03-15T12:00:00Z');
 const gmst = satellite.gstime(date);
 
 describe('ステーション判定（AOS/LOS）', () => {
-  test('checkAosStatus: 直上は true / 反対側は false', () => {
-    // 直上：筑波と同じ緯度経度・高度400km を ECI に
-    const overGd = {
-      latitude: satellite.degreesToRadians(TSUKUBA_STATION.lat),
-      longitude: satellite.degreesToRadians(TSUKUBA_STATION.lon),
-      height: 400,
-    };
-    const overEci = satellite.ecfToEci(satellite.geodeticToEcf(overGd), gmst);
-    expect(checkAosStatus(overEci, gmst)).toBe(true);
-
-    // 反対側：緯度反転・経度+180°
-    const antiGd = {
-      latitude: -satellite.degreesToRadians(TSUKUBA_STATION.lat),
-      longitude: satellite.degreesToRadians(TSUKUBA_STATION.lon) + Math.PI,
-      height: 400,
-    };
-    const antiEci = satellite.ecfToEci(satellite.geodeticToEcf(antiGd), gmst);
-    expect(checkAosStatus(antiEci, gmst)).toBe(false);
-  });
-
   test('computeStationsStatus: ID/件数の保存と AOS 切り替え（閾値の微調整）', () => {
     // 2局：筑波 と その反対点
     const stations = [

@@ -20,16 +20,9 @@
 import React from 'react';
 import type { SimClock, ClockMode } from '@/types';
 import { TIME_TRAVEL_RATES } from '@/constants';
-
-function fmt(dtMs: number) {
-  const d = new Date(dtMs);
-  // ローカル時刻（yyyy-MM-dd HH:mm:ss）
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return (
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
-    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-  );
-}
+import { formatDateTimeMs } from '@/utils';
+import sharedStyles from '../panels.module.css';
+import styles from './TimeTravelPanel.module.css';
 
 export const TimeTravelPanel: React.FC<{
   clock: SimClock;
@@ -78,52 +71,27 @@ export const TimeTravelPanel: React.FC<{
   };
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 'clamp(8px, 2vh, 24px)',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 1000,
-        backgroundColor: 'rgba(0, 18, 40, 0.8)',
-        color: '#00e5ff',
-        padding: '12px',
-        borderRadius: 10,
-        border: '1px solid #00e5ff',
-        fontFamily: '"Share Tech Mono", monospace',
-        minWidth: 320,
-        maxWidth: 'min(96vw, 720px)',
-        boxSizing: 'border-box',
-      }}
-    >
+    <div className={`${sharedStyles.basePanel} ${styles.container}`}>
       {/* モード切替 ＋ ウィンドウ幅（±分） */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 8,
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div className={styles.header}>
+        <div className={styles.flexRow}>
           <button
             onClick={() => setMode('realtime')}
-            style={{ cursor: 'pointer', opacity: mode === 'realtime' ? 1 : 0.6 }}
+            className={`${styles.button} ${mode === 'realtime' ? styles.buttonActive : styles.buttonInactive}`}
             title="Realtime mode"
           >
             Realtime
           </button>
           <button
             onClick={() => setMode('time-travel')}
-            style={{ cursor: 'pointer', opacity: mode === 'time-travel' ? 1 : 0.6 }}
+            className={`${styles.button} ${mode === 'time-travel' ? styles.buttonActive : styles.buttonInactive}`}
             title="Time-travel mode"
           >
             Time Travel
           </button>
         </div>
 
-        <div style={{ fontSize: 12, opacity: 0.85 }}>
+        <div className={styles.hintText}>
           Window ±
           <input
             type="number"
@@ -155,29 +123,13 @@ export const TimeTravelPanel: React.FC<{
           </div>
 
           {/* 範囲表示（左=最小/右=最大） */}
-          <div
-            style={{
-              marginTop: 6,
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: 12,
-              opacity: 0.85,
-            }}
-          >
-            <span>{fmt(minMs)}</span>
-            <span>{fmt(maxMs)}</span>
+          <div className={`${styles.header} ${styles.hintText}`} style={{ marginTop: 6 }}>
+            <span>{formatDateTimeMs(minMs)}</span>
+            <span>{formatDateTimeMs(maxMs)}</span>
           </div>
 
           {/* 微調整ボタン・現在時刻ジャンプ・現在選択時刻 */}
-          <div
-            style={{
-              marginTop: 8,
-              display: 'flex',
-              gap: 8,
-              alignItems: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className={styles.flexRow} style={{ marginTop: 8 }}>
             <button onClick={() => bump(-5 * 60_000)} title="-5 minutes">
               ◀ -5m
             </button>
@@ -194,25 +146,17 @@ export const TimeTravelPanel: React.FC<{
               +5m ▶
             </button>
 
-            <span style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.85 }}>
-              {fmt(selectedMs)}
+            <span className={styles.hintText} style={{ marginLeft: 'auto' }}>
+              {formatDateTimeMs(selectedMs)}
             </span>
           </div>
 
           {/* 再生/一時停止 ＋ レート */}
-          <div
-            style={{
-              marginTop: 8,
-              display: 'flex',
-              gap: 8,
-              alignItems: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className={styles.flexRow} style={{ marginTop: 8 }}>
             <button onClick={togglePlay} title="Play/Pause">
               {playing ? 'Pause' : 'Play'}
             </button>
-            <span style={{ fontSize: 12 }}>Rate:</span>
+            <span className={styles.hintText}>Rate:</span>
             <select value={rate} onChange={(e) => setRate(Number(e.target.value))}>
               {TIME_TRAVEL_RATES.map((r) => (
                 <option key={r} value={r}>

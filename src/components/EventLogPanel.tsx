@@ -17,11 +17,9 @@
 
 import React, { useMemo } from 'react';
 import type { LogEvent } from '@/types';
-
-const fmtTime = (d: Date) => {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-};
+import { formatTimeHMS } from '@/utils';
+import sharedStyles from './panels/panels.module.css';
+import styles from './EventLogPanel.module.css';
 
 export const EventLogPanel: React.FC<{ logs: LogEvent[] }> = React.memo(function EventLogPanel({ logs }) {
   // 表示色マップ（メモ化でインスタンス固定）
@@ -35,32 +33,8 @@ export const EventLogPanel: React.FC<{ logs: LogEvent[] }> = React.memo(function
   );
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '10vh',
-        right: '2vw',
-        zIndex: 1000,
-        backgroundColor: 'rgba(0, 18, 40, 0.8)',
-        color: '#00e5ff',
-        padding: '15px',
-        borderRadius: '8px',
-        fontFamily: '"Share Tech Mono", monospace',
-        border: '1px solid #00e5ff',
-        minWidth: 300,
-        pointerEvents: 'none',
-        boxSizing: 'border-box',
-      }}
-    >
-      <div
-        style={{
-          marginBottom: '8px',
-          fontSize: '0.8rem',
-          borderBottom: '1px solid #00e5ff55',
-          paddingBottom: '4px',
-          textAlign: 'left',
-        }}
-      >
+    <div className={`${sharedStyles.basePanel} ${styles.container}`}>
+      <div className={`${sharedStyles.header} ${styles.title}`}>
         SYSTEM EVENT LOG
       </div>
 
@@ -73,7 +47,7 @@ export const EventLogPanel: React.FC<{ logs: LogEvent[] }> = React.memo(function
               key={log.id}
               style={{ fontSize: '0.8rem', display: 'flex', gap: '10px', color }}
             >
-              <span style={{ opacity: 0.7 }}>[{fmtTime(log.time)}]</span>
+              <span style={{ opacity: 0.7 }}>[{formatTimeHMS(log.time)}]</span>
               <span>{log.message}</span>
             </div>
           );

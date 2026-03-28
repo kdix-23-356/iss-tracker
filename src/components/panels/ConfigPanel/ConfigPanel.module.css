@@ -1,0 +1,28 @@
+.container {
+  bottom: clamp(8px, 10vh, 64px);
+  left: clamp(8px, 2vw, 24px);
+  padding: 12px;
+  border-radius: 8px;
+  min-width: 240px;
+  max-width: min(92vw, 360px);
+}
+
+.sectionTitle {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.sectionTitle:not(:first-child) {
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.label {
+  display: block;
+  cursor: pointer;
+}
+
+.label + .label {
+  margin-top: 5px;
+}

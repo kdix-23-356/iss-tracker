@@ -17,6 +17,8 @@ import {
   STATION_EVENT_LOG_VISIBLE_MIN,
   STATION_EVENT_LOG_VISIBLE_MAX,
 } from '@/constants';
+import sharedStyles from '../panels.module.css';
+import styles from './ConfigPanel.module.css';
 
 export type UiSettings = {
   // layers
@@ -54,28 +56,12 @@ export const ConfigPanel: React.FC<{
   };
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: 'clamp(8px, 10vh, 64px)',
-        left: 'clamp(8px, 2vw, 24px)',
-        zIndex: 1000,
-        backgroundColor: 'rgba(0, 18, 40, 0.8)',
-        color: '#00e5ff',
-        padding: '12px',
-        borderRadius: '8px',
-        border: '1px solid #00e5ff',
-        fontFamily: '"Share Tech Mono", monospace',
-        minWidth: 240,
-        maxWidth: 'min(92vw, 360px)',
-        boxSizing: 'border-box',
-      }}
-    >
+    <div className={`${sharedStyles.basePanel} ${styles.container}`}>
       {/* LAYER CONTROL */}
-      <div style={{ marginBottom: '10px', fontSize: '0.85rem', opacity: 0.8 }}>
+      <div className={styles.sectionTitle}>
         LAYER CONTROL
       </div>
-      <label style={{ display: 'block', cursor: 'pointer' }}>
+      <label className={styles.label}>
         <input
           type="checkbox"
           checked={settings.orbit}
@@ -83,7 +69,7 @@ export const ConfigPanel: React.FC<{
         />{' '}
         Show Orbit Path
       </label>
-      <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
+      <label className={styles.label}>
         <input
           type="checkbox"
           checked={settings.footprint}
@@ -91,7 +77,7 @@ export const ConfigPanel: React.FC<{
         />{' '}
         Show Footprint
       </label>
-      <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
+      <label className={styles.label}>
         <input
           type="checkbox"
           checked={settings.station}
@@ -101,10 +87,10 @@ export const ConfigPanel: React.FC<{
       </label>
 
       {/* PANELS */}
-      <div style={{ margin: '12px 0 8px', fontSize: '0.85rem', opacity: 0.8 }}>
+      <div className={styles.sectionTitle}>
         PANELS
       </div>
-      <label style={{ display: 'block', cursor: 'pointer' }}>
+      <label className={styles.label}>
         <input
           type="checkbox"
           checked={settings.telemetry}
@@ -112,7 +98,7 @@ export const ConfigPanel: React.FC<{
         />{' '}
         Telemetry
       </label>
-      <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
+      <label className={styles.label}>
         <input
           type="checkbox"
           checked={settings.stationBoard}
@@ -120,7 +106,7 @@ export const ConfigPanel: React.FC<{
         />{' '}
         Station Board
       </label>
-      <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
+      <label className={styles.label}>
         <input
           type="checkbox"
           checked={settings.stationLogs}
@@ -128,7 +114,7 @@ export const ConfigPanel: React.FC<{
         />{' '}
         Station Logs
       </label>
-      <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
+      <label className={styles.label}>
         <input
           type="checkbox"
           checked={settings.systemLog}
@@ -136,7 +122,7 @@ export const ConfigPanel: React.FC<{
         />{' '}
         System Event Log
       </label>
-      <label style={{ display: 'block', cursor: 'pointer', marginTop: '5px' }}>
+      <label className={styles.label}>
         <input
           type="checkbox"
           checked={settings.timeControl}

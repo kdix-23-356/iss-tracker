@@ -1,0 +1,39 @@
+.container {
+  top: clamp(8px, 2vh, 24px);
+  right: clamp(8px, 2vw, 24px);
+  padding: 14px;
+  border-radius: 12px;
+  min-width: 260px;
+  max-width: min(92vw, 460px);
+}
+
+.title {
+  font-size: 1rem;
+}
+
+.empty {
+  opacity: 0.8;
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.6fr 0.6fr 0.9fr;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.headerCell {
+  opacity: 0.7;
+}
+
+.cellRight {
+  text-align: right;
+}
+
+.aos {
+  color: #00ffaa;
+}
+.los {
+  color: #ffaa00;
+}
