@@ -3,13 +3,11 @@ import { expect, test, describe } from 'vitest';
 import * as satellite from 'satellite.js';
 import {
   calculateIssTelemetry,
-  checkAosStatus,
   calculateOrbitPoints,
   wrapLon,
   shortestLonDelta,
   lerpLon,
 } from './orbitalLogic';
-import { TSUKUBA_STATION } from '@/constants';
 
 /**
  * テスト方針
@@ -51,35 +49,9 @@ describe('Orbital Logic（ビジネスロジック層）単体テスト', () => 
       expect(result?.cartesian).toBeDefined();
       // Cartesian3 はオブジェクト。数値プロパティが存在することを軽く確認
       // （厳密な同一性は不要）
-      // @ts-expect-error: runtime check
       expect(typeof result?.cartesian.x).toBe('number');
-      // @ts-expect-error: runtime check
       expect(typeof result?.cartesian.y).toBe('number');
-      // @ts-expect-error: runtime check
       expect(typeof result?.cartesian.z).toBe('number');
-    });
-  });
-
-  describe('checkAosStatus()', () => {
-    test('地球の裏側（筑波の反対側）に衛星がある場合は AOS=false', () => {
-      const gmst = satellite.gstime(mockDate);
-
-      // 筑波の真反対（緯度反転・経度 +180°）を geodetic で作る
-      // ※ height は便宜的に 400 km（LEO相当）
-      const farGd = {
-        latitude: -satellite.degreesToRadians(TSUKUBA_STATION.lat),
-        longitude: satellite.degreesToRadians(TSUKUBA_STATION.lon) + Math.PI,
-        height: 400, // km
-      };
-
-      // geodetic → ECF（地球固定座標）
-      const farEcf = satellite.geodeticToEcf(farGd);
-
-      // ECF → ECI（慣性座標）へ変換（checkAosStatus は ECI を想定）
-      const farEci = satellite.ecfToEci(farEcf, gmst);
-
-      const isAos = checkAosStatus(farEci, gmst);
-      expect(isAos).toBe(false);
     });
   });
 

@@ -1,0 +1,43 @@
+.container {
+  bottom: clamp(8px, 10vh, 64px);
+  right: clamp(8px, 2vw, 24px);
+  padding: 12px;
+  border-radius: 10px;
+  min-width: 260px;
+  max-width: min(92vw, 460px);
+  max-height: 40vh;
+  overflow: auto;
+}
+
+.empty {
+  opacity: 0.8;
+  font-size: 13px;
+}
+
+.logGroup {
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 8px;
+}
+
+.logGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.logList {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.logItem {
+  font-size: 13px;
+  color: #fff;
+}
+
+.logType {
+  display: inline-block;
+  width: 44px;
+}

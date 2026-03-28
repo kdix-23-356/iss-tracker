@@ -1,0 +1,13 @@
+.container {
+  bottom: 10vh;
+  right: 2vw;
+  padding: 15px;
+  border-radius: 8px;
+  min-width: 300px;
+  pointer-events: none;
+}
+
+.title {
+  font-size: 0.8rem;
+  text-align: left;
+}

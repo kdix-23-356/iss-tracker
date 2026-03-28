@@ -15,8 +15,6 @@
 export {
   // ISS テレメトリ（cartesian[m] / speed[km/s] / altitude[km] など）
   calculateIssTelemetry,
-  // 筑波の AOS 判定（互換用途）
-  checkAosStatus,
   // 軌道可視化点列（±duration, step 分解 / 日付変更線跨ぎ補間）
   calculateOrbitPoints,
 
@@ -38,3 +36,6 @@ export { diffStationAos } from './stationEvents';
 
 /* ===== ステーションの並び替え（仰角降順 → 距離昇順 → id昇順） ===== */
 export { rankStationsByElevation } from './stationRanking';
+
+/* ===== フォーマット ===== */
+export { formatTimeHMS, formatDateTimeMs } from './format';

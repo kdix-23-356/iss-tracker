@@ -1,0 +1,21 @@
+.container {
+  top: clamp(8px, 2vh, 24px);
+  left: clamp(8px, 2vw, 24px);
+  padding: 16px;
+  border-radius: 12px;
+  pointer-events: none;
+  min-width: 220px;
+  max-width: min(92vw, 420px);
+}
+
+.title {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 8px;
+  font-size: 0.9rem;
+}

@@ -30,8 +30,7 @@ type Props = {
   issPos: Cartesian3 | null;
 };
 
-export const GroundStationLayer: React.FC<Props> = React.memo(
-  function GroundStationLayer({ stationStatuses, issPos }) {
+export const GroundStationLayer: React.FC<Props> = ({ stationStatuses, issPos }) => {
     // ---- マテリアル・色（固定） ----
     const aosPointColor = useMemo(() => Color.LIME.withAlpha(1.0), []);
     const outlineColor = useMemo(() => Color.BLACK, []);
@@ -115,9 +114,4 @@ export const GroundStationLayer: React.FC<Props> = React.memo(
           })}
       </>
     );
-  },
-  // ---- 簡易等価比較：参照が不変なら再描画をスキップ ----
-  (prev, next) =>
-    prev.issPos === next.issPos &&
-    prev.stationStatuses === next.stationStatuses
-);
+};

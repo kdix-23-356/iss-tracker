@@ -1,0 +1,41 @@
+.container {
+  top: clamp(8px, 2vh, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px;
+  border-radius: 10px;
+  min-width: 320px;
+  max-width: min(96vw, 720px);
+}
+
+.header {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flexRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.button {
+  cursor: pointer;
+}
+
+.buttonActive {
+  opacity: 1;
+}
+
+.buttonInactive {
+  opacity: 0.6;
+}
+
+.hintText {
+  font-size: 12px;
+  opacity: 0.85;
+}

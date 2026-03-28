@@ -20,13 +20,9 @@
 import React, { useMemo } from 'react';
 import type { StationEventLogMap, GroundStationEvent } from '@/types';
 import { STATIONS } from '@/constants';
-
-const fmtTime = (ms: number) => {
-  const d = new Date(ms);
-  const p = (n: number) => String(n).padStart(2, '0');
-  // yyyy-MM-dd HH:mm:ss
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-};
+import { formatDateTimeMs } from '@/utils';
+import sharedStyles from '../panels.module.css';
+import styles from './StationLogsPanel.module.css';
 
 export const StationLogsPanel: React.FC<{
   logsMap: StationEventLogMap;
@@ -53,79 +49,38 @@ export const StationLogsPanel: React.FC<{
   }, [logsMap, showCount]);
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: 'clamp(8px, 10vh, 64px)',
-        right: 'clamp(8px, 2vw, 24px)',
-        zIndex: 1000,
-        backgroundColor: 'rgba(0, 18, 40, 0.8)',
-        color: '#00e5ff',
-        padding: '12px',
-        borderRadius: '10px',
-        border: '1px solid #00e5ff',
-        fontFamily: '"Share Tech Mono", monospace',
-        minWidth: 260,
-        maxWidth: 'min(92vw, 460px)',
-        maxHeight: '40vh',
-        overflow: 'auto',
-        boxSizing: 'border-box',
-      }}
-    >
-      <div
-        style={{
-          marginBottom: 8,
-          fontSize: '0.9rem',
-          textAlign: 'center',
-          borderBottom: '1px solid #00e5ff55',
-          paddingBottom: 6,
-        }}
-      >
+    <div className={`${sharedStyles.basePanel} ${styles.container}`}>
+      <div className={sharedStyles.header} style={{ fontSize: '0.9rem' }}>
         STATION EVENT LOG (per station)
       </div>
 
       {stations.length === 0 ? (
-        <div style={{ opacity: 0.8, fontSize: 13 }}>No AOS/LOS events yet.</div>
+        <div className={styles.empty}>No AOS/LOS events yet.</div>
       ) : (
         stations.map(({ id, events }) => (
-          <div
-            key={id}
-            style={{
-              marginBottom: 10,
-              padding: 8,
-              border: '1px solid rgba(0,229,255,0.2)',
-              borderRadius: 8,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: 4,
-              }}
-            >
+          <div key={id} className={styles.logGroup}>
+            <div className={styles.logGroupHeader}>
               <strong style={{ color: '#fff' }}>{idToName.get(id) ?? id}</strong>
               {/* 最上段のイベント（events[0]）が最新 */}
               <span style={{ opacity: 0.75, fontSize: 12 }}>
-                latest {fmtTime(events[0].at)}
+                latest {formatDateTimeMs(events[0].at)}
               </span>
             </div>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <ul className={styles.logList}>
               {events.map((e, i) => (
                 <li
                   key={`${id}-${e.at}-${i}`}
-                  style={{ fontSize: 13, color: '#fff' }}
+                  className={styles.logItem}
                 >
                   <span
+                    className={styles.logType}
                     style={{
-                      display: 'inline-block',
-                      width: 44,
                       color: e.type === 'AOS' ? '#00ffaa' : '#ffaa00',
                     }}
                   >
                     {e.type}
                   </span>
-                  <span style={{ opacity: 0.85 }}>{fmtTime(e.at)}</span>
+                  <span style={{ opacity: 0.85 }}>{formatDateTimeMs(e.at)}</span>
                   <span style={{ marginLeft: 10, opacity: 0.9 }}>
                     El {e.elevationDeg.toFixed(1)}° / {Math.round(e.rangeKm)} km
                   </span>

@@ -11,7 +11,7 @@
 
 import { Cartesian3 } from 'cesium';
 import * as satellite from 'satellite.js';
-import { TSUKUBA_STATION, AOS_ELEVATION_THRESHOLD_DEG } from '@/constants';
+import { AOS_ELEVATION_THRESHOLD_DEG } from '@/constants';
 import type { GroundStation, GroundStationStatus } from '@/types';
 
 /* =====================================================
@@ -146,30 +146,7 @@ export function computeStationsStatus(
 }
 
 /* =====================================================
- *  4) 筑波のみの AOS 判定（互換用途）
- * ===================================================== */
-
-/**
- * 筑波（TSUKUBA_STATION）の AOS 判定
- * @param pEci ECI（km）
- * @param gmst GMST（rad）
- * @param thresholdDeg AOS 閾値（deg）
- */
-export function checkAosStatus(
-  pEci: EciVecKm,
-  gmst: number,
-  thresholdDeg: number = AOS_ELEVATION_THRESHOLD_DEG,
-) {
-  const { elevationDeg } = computeLookAnglesDeg(
-    { lat: TSUKUBA_STATION.lat, lon: TSUKUBA_STATION.lon, heightKm: TSUKUBA_STATION.height },
-    pEci,
-    gmst,
-  );
-  return elevationDeg >= thresholdDeg;
-}
-
-/* =====================================================
- *  5) 軌道の可視化点列生成（±duration を step 分解）
+ *  4) 軌道の可視化点列生成（±duration を step 分解）
  *     - 日付変更線跨ぎを検出し、ライン途切れ防止の中間点を挿入
  *     - Cesium 用に Cartesian3（m）配列で返す
  * ===================================================== */
