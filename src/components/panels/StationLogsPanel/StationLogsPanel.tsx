@@ -24,10 +24,14 @@ import { formatDateTimeMs } from '@/utils';
 import sharedStyles from '../panels.module.css';
 import styles from './StationLogsPanel.module.css';
 
-export const StationLogsPanel: React.FC<{
+interface StationLogsPanelProps {
+  /** 局IDをキーとしたAOS/LOSイベント履歴のマップ */
   logsMap: StationEventLogMap;
-  showCount: number; // 5..10
-}> = ({ logsMap, showCount }) => {
+  /** 各局ごとに表示する直近のイベント件数（ConfigPanelのスライダで制御、通常5〜10） */
+  showCount: number;
+}
+
+export const StationLogsPanel: React.FC<StationLogsPanelProps> = ({ logsMap, showCount }) => {
   // 局ID -> 局名 の解決表
   const idToName = useMemo(
     () => new Map<string, string>(STATIONS.map((s) => [s.id, s.name] as const)),

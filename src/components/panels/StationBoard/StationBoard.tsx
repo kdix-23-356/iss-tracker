@@ -24,9 +24,12 @@ import styles from './StationBoard.module.css';
 
 type Row = { st: GroundStation; s: GroundStationStatus };
 
-export const StationBoard: React.FC<{
+interface StationBoardProps {
+  /** 全地上局の現在のステータス（AOS/LOS、仰角、距離など）のマップ */
   stationStatuses: Record<string, GroundStationStatus>;
-}> = React.memo(function StationBoard({ stationStatuses }) {
+}
+
+export const StationBoard: React.FC<StationBoardProps> = React.memo(function StationBoard({ stationStatuses }) {
   const rows: Row[] = rankStationsByElevation(STATIONS, stationStatuses);
 
   return (

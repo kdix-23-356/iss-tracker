@@ -24,10 +24,14 @@ import { formatDateTimeMs } from '@/utils';
 import sharedStyles from '../panels.module.css';
 import styles from './TimeTravelPanel.module.css';
 
-export const TimeTravelPanel: React.FC<{
+interface TimeTravelPanelProps {
+  /** 現在のシミュレーションクロック状態（モード、選択時刻、再生状態など） */
   clock: SimClock;
+  /** クロック状態を更新するためのセッター関数 */
   setClock: React.Dispatch<React.SetStateAction<SimClock>>;
-}> = ({ clock, setClock }) => {
+}
+
+export const TimeTravelPanel: React.FC<TimeTravelPanelProps> = ({ clock, setClock }) => {
   const { mode, selectedMs, playing, rate, windowMin } = clock;
 
   /** モード変更：Realtime に入ると playing は false に */

@@ -21,7 +21,12 @@ import { formatTimeHMS } from '@/utils';
 import sharedStyles from './panels/panels.module.css';
 import styles from './EventLogPanel.module.css';
 
-export const EventLogPanel: React.FC<{ logs: LogEvent[] }> = React.memo(function EventLogPanel({ logs }) {
+interface EventLogPanelProps {
+  /** 表示するシステムイベントログの配列（先頭が最新であることを想定） */
+  logs: LogEvent[];
+}
+
+export const EventLogPanel: React.FC<EventLogPanelProps> = React.memo(function EventLogPanel({ logs }) {
   // 表示色マップ（メモ化でインスタンス固定）
   const colorMap = useMemo(
     () => ({

@@ -21,7 +21,12 @@ import type { IssState } from '@/types';
 import sharedStyles from '../panels.module.css';
 import styles from './Dashboard.module.css';
 
-export const Dashboard: React.FC<{ state: IssState }> = ({ state }) => {
+interface DashboardProps {
+  /** ISSの現在のテレメトリ情報（速度、高度、緯度、経度など） */
+  state: IssState;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ state }) => {
   // 表示用の丸め関数（小数点以下の桁を明示）。toFixedの丸め誤差を避けるため、Math.roundで明示的に丸めてからフォーマットする
   const fmt = {
     speed: (v: number) => (Math.round(v * 1000) / 1000).toFixed(3),

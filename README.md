@@ -29,8 +29,12 @@
   既定の ±6 時間でシーク・再生（**1/10/60/300x**）。タイムトラベル中はログを記録しません。
 
 - **Performance & UX / 性能と UX**
-  Use Cesium **`requestRenderMode`** (render on change) and **lazy loading** for heavy panels (Board/Logs/TimeControl).
-  変化時のみ再描画する `requestRenderMode`、重いパネルの遅延読込などで負荷を抑えます。
+  Use Cesium **`requestRenderMode`** (render on change), **lazy loading** for heavy panels (Board/Logs/TimeControl), and **vendor chunk splitting** in Vite to optimize initial load.
+  変化時のみ再描画する `requestRenderMode`、重いパネルの遅延読込、Vite による**ベンダーチャンク分割**などで初期読み込みと実行負荷を抑えます。
+
+- **Responsive & Dark Mode / レスポンシブ＆ダークモード対応**
+  Automatically adapts to the OS's light/dark theme preference and scales smoothly on smaller screens using CSS Modules.
+  OS のライト/ダークテーマ設定に自動連動し、CSS Modules による画面幅に応じたレスポンシブなレイアウト調整を行います。
 
 ---
 
@@ -53,7 +57,26 @@ npm run build
 
 # Preview / ローカルプレビュー
 npm run preview
+
+# Type check / 型チェック
+npm run typecheck
+
+# Lint / 静的解析
+npm run lint
 ```
+
+---
+
+## 🌐 Deployment / デプロイ
+This project is configured to be easily deployed to GitHub Pages.
+GitHub Pages へのデプロイが npm スクリプトとして設定されています。
+
+```bash
+# Build and deploy to the `gh-pages` branch / gh-pages ブランチへデプロイ
+npm run deploy
+```
+
+> **Note / 注意**: Ensure the `base` path in `vite.config.ts` matches your repository name (e.g., `/iss-tracker/`). / `vite.config.ts` の `base` 指定がリポジトリ名と一致していることを確認してください。
 
 ---
 
@@ -188,6 +211,19 @@ All core computations converge in `renderAt(target: Date)`, shared by realtime a
 
 ---
 
+### State Management & Data Flow / 状態管理とデータフロー
+The application employs a hook-based architecture to separate concerns, creating a clear one-way data flow.
+フックベースのアーキテクチャで関心を分離し、明確な単一方向のデータフローを構築しています。
+
+- **`useTle`**: Fetches TLE data and provides a `satrec` object. / TLE データを取得し、`satrec` オブジェクトを提供します。
+- **`useIssSimulation`**: Takes the `satrec` object and manages all simulation-related state (ISS position, orbit, station statuses, event logs, clock). It encapsulates the core `renderAt` logic. / `satrec` を受け取り、シミュレーション関連の全状態（ISS位置、軌道、地上局ステータス、イベントログ、クロック）を管理します。コアロジックである `renderAt` を内包します。
+- **`App.tsx`**: Consumes the state from `useIssSimulation` and passes it down to presentational components. It also manages UI-specific state (e.g., panel visibility). / `useIssSimulation` から状態を受け取り、表示コンポーネントに渡します。また、UI固有の状態（パネル表示など）も管理します。
+
+This results in a clear data flow: `API → useTle → useIssSimulation → App → UI Components`.
+これにより `API → useTle → useIssSimulation → App → UIコンポーネント` というデータフローが実現されます。
+
+---
+
 ### Utilities / ユーティリティ設計
 `src/utils` は **純粋関数** が基本。明示的 re-export により API 境界を明確化。
 - `calculateIssTelemetry`
@@ -214,7 +250,7 @@ Mid‑points are inserted around the ±180° longitude crossing to keep polyline
 ## 🧪 Tests / テスト
 
 Vitest により以下を検証。
-- 角度補助関数の性質（正規化・反対称性・連結性）
+- 角度補助関数の性質（正規化・反対称性・連結性）— **プロパティベーステスト**で検証
 - 軌道点列の点数下限
 - AOS / LOS 判定の一貫性
 - AOS / LOS イベント差分検出
