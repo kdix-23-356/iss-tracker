@@ -20,25 +20,40 @@ import {
 import sharedStyles from '../panels.module.css';
 import styles from './ConfigPanel.module.css';
 
+/**
+ * パネルやレイヤーの表示状態、およびイベントログの表示件数を管理する設定オブジェクト
+ */
 export type UiSettings = {
-  // layers
+  /** 軌道パス（過去・未来）を3D空間上に表示するかどうか */
   orbit: boolean;
+  /** ISS直下のフットプリント（円）を表示するかどうか */
   footprint: boolean;
+  /** 地上局のマーカーとラベルを表示するかどうか */
   station: boolean;
-  // panels
+  
+  /** テレメトリパネル（左上）の表示状態 */
   telemetry: boolean;
+  /** 地上局ボード（右上）の表示状態 */
   stationBoard: boolean;
+  /** 局別イベントログパネル（右下）の表示状態 */
   stationLogs: boolean;
+  /** システムイベントログパネル（右下・StationLogsより下）の表示状態 */
   systemLog: boolean;
+  /** タイムトラベル操作パネル（上部中央）の表示状態 */
   timeControl: boolean;
-  // per-station log
-  stationLogVisibleCount: number; // 5..10
+  
+  /** 局別イベントログの表示件数（5〜10件） */
+  stationLogVisibleCount: number;
 };
 
-export const ConfigPanel: React.FC<{
+interface ConfigPanelProps {
+  /** 現在のUI設定状態 */
   settings: UiSettings;
+  /** UI設定を更新するためのセッター関数 */
   setSettings: React.Dispatch<React.SetStateAction<UiSettings>>;
-}> = ({ settings, setSettings }) => {
+}
+
+export const ConfigPanel: React.FC<ConfigPanelProps> = ({ settings, setSettings }) => {
   /** 任意のブールキーを反転（型安全） */
   const toggle = <K extends keyof UiSettings>(key: K) =>
     setSettings((s) => ({
